@@ -5,6 +5,16 @@ block metadata
 block content
   .text-center
     h1 PicME!
-    p Red social compra de fotitos
-    a.btn.btn-primary(href="auth/register")
-      | Crear cuenta
+    if user
+      a.btn.btn-success(href="/posts/create")
+        | Nueva publicación
+
+    each pub in publicaciones
+      .card.mb-3
+        .card-body
+          h4
+            a(href="/posts/" + pub.id)
+              = pub.titulo
+          p= pub.descripcion
+          small
+            | Por #{pub.usuario.username}

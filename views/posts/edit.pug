@@ -1,0 +1,29 @@
+extends ../layouts/layout
+
+block content
+
+  h2 Editar publicación
+
+  form(
+    action="/posts/" + publicacion.id + "/edit"
+    method="POST"
+  )
+
+    .mb-3
+      label.form-label Título
+
+      input.form-control(
+        type="text"
+        name="titulo"
+        value=publicacion.titulo
+      )
+
+    .mb-3
+      label.form-label Descripción
+
+      textarea.form-control(
+        name="descripcion"
+      )= publicacion.descripcion
+
+    button.btn.btn-primary
+      | Guardar cambios

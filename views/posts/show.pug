@@ -1,0 +1,25 @@
+extends ../layouts/layout
+
+block content
+
+  h2= publicacion.titulo
+
+  p= publicacion.descripcion
+
+  p
+    strong Autor:
+    |  #{publicacion.usuario.username}
+
+  if user && user.id === publicacion.usuario_id
+
+    a.btn.btn-warning(
+      href="/posts/" + publicacion.id + "/edit"
+    )
+      | Editar
+
+    form(
+      action="/posts/" + publicacion.id + "/delete"
+      method="POST"
+    )
+      button.btn.btn-danger
+        | Eliminar

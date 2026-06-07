@@ -1,0 +1,26 @@
+extends ../layouts/layout
+
+block content
+
+  h2 Nueva publicación
+
+  form(action="/posts/create" method="POST")
+
+    .mb-3
+      label.form-label Título
+
+      input.form-control(
+        type="text"
+        name="titulo"
+        required
+      )
+
+    .mb-3
+      label.form-label Descripción
+
+      textarea.form-control(
+        name="descripcion"
+      )
+
+    button.btn.btn-success
+      | Publicar

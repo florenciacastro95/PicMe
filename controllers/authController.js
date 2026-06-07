@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const { Usuario } = require('../models');
-
+const sequelize = require('../config/database');
 exports.showLogin = (req, res) => {
     res.render('auth/login');
 };
@@ -24,17 +24,16 @@ exports.login = async (req, res) => {
             return res.redirect('/auth/login');
         }
         /*
-                const user = await Usuario.findOne({
-                    where: { username }
-                });
-        
-                console.log(user);*/
         const usuarios = await Usuario.findAll();
 
         console.log(
             usuarios.map(u => u.toJSON())
+        );*/
+        const [usuarios] = await sequelize.query(
+            'SELECT * FROM usuarios'
         );
 
+console.log(usuarios);
         const user = await Usuario.findOne({
             where: { username }
         });

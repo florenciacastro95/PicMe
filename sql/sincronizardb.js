@@ -9,7 +9,6 @@ async function syncDatabase() {
 
         await sequelize.sync({ force: true });
 
-        console.log('Tabla usuarios creada');
 
     } catch (error) {
 
