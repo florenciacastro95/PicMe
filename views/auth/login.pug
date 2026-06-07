@@ -1,0 +1,29 @@
+extends ../layouts/layout
+
+block metadata
+  title Registrarse
+
+block content
+
+  h2 Crear cuenta
+
+  form
+
+    .mb-3
+      label.form-label Usuario
+      input.form-control(type="text")
+
+    .mb-3
+      label.form-label Email
+      input.form-control(type="email")
+
+    .mb-3
+      label.form-label Contraseña
+      input.form-control(type="password")
+
+    button.btn.btn-primary
+      | Registrarse
+
+  p.mt-3
+    | ¿Ya tenés cuenta?
+    a.ms-1(href="/auth/login") Iniciar sesión

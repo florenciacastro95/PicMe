@@ -1,6 +1,10 @@
 extends ../layouts/layout
 
+block metadata
+  title Inicio - PicME!
 block content
   .text-center
-  h1 PicME!
-  p Red social compra de fotitos
+    h1 PicME!
+    p Red social compra de fotitos
+    a.btn.btn-primary(href="auth/register")
+      | Crear cuenta

@@ -1,0 +1,21 @@
+extends ../layouts/layout
+
+block metadata
+  title Iniciar sesión
+
+block content
+
+  h2 Iniciar sesión
+
+  form
+
+    .mb-3
+      label.form-label Usuario
+      input.form-control(type="text")
+
+    .mb-3
+      label.form-label Contraseña
+      input.form-control(type="password")
+
+    button.btn.btn-primary
+      | Ingresar
