@@ -60,12 +60,11 @@ app.use((req,res,next)=>{
 // puerto
 const PORT = process.env.PORT || 3000;
 
+
+//*** */
 sequelize.authenticate()
     .then(() => {
         console.log('conectado a Postgres');
-        app.listen(PORT, () => {
-            console.log(`servidor andando en puerto ${PORT}`);
-        });
     })
     .catch((error)=>{
         console.log('error al conectar conn la db', error);
