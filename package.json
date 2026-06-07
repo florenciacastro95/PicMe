@@ -1,25 +1,29 @@
 {
-  "name": "picme",
-  "version": "1.0.0",
-  "description": "Trabajo práctico FOTAZA2 Programacion Web 2",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
-  },
-  "author": "Flor Castro",
-  "license": "ISC",
-  "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-session": "^1.19.0",
-    "pg": "^8.16.3",
-    "pg-hstore": "^2.3.4",
-    "pug": "^3.0.2",
-    "sequelize": "^6.37.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  }
+    "name": "picme",
+    "version": "1.0.0",
+    "description": "Trabajo práctico FOTAZA2 Programacion Web 2",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js",
+        "db:test": "node sql/test-user.js",
+        "db:create": "node sql/creardb.js",
+        "db:sync": "node sql/sincronizardb.js"
+    },
+    "author": "Flor Castro",
+    "license": "ISC",
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "cookie-parser": "^1.4.7",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-session": "^1.19.0",
+        "pg": "^8.16.3",
+        "pg-hstore": "^2.3.4",
+        "pug": "^3.0.2",
+        "sequelize": "^6.37.7"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
 }

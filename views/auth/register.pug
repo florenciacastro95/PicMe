@@ -1,21 +1,29 @@
 extends ../layouts/layout
 
 block metadata
-  title Iniciar sesión
+  title Registrarse
 
 block content
 
-  h2 Iniciar sesión
+  h2 Crear cuenta
 
-  form
+  form(action="/auth/register" method="POST")
 
     .mb-3
       label.form-label Usuario
-      input.form-control(type="text")
+      input.form-control(type="text" name="username")
+
+    .mb-3
+      label.form-label Email
+      input.form-control(type="email" name="email")
 
     .mb-3
       label.form-label Contraseña
-      input.form-control(type="password")
+      input.form-control(type="password" name="password")
 
     button.btn.btn-primary
-      | Ingresar
+      | Registrarse
+
+  p.mt-3
+    | ¿Ya tenés cuenta?
+    a.ms-1(href="/auth/login") Iniciar sesión
