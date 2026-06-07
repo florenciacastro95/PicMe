@@ -1,21 +1,26 @@
 extends ../layouts/layout
 
 block metadata
-  title Iniciar sesión
-
+  title Iniciar sesión en PicME!
+  meta(name="description" content="Inicia sesión en PicME!")
 block content
+  .row.justify-content-center
+    .col-md-6
+      .card.p-4
+        h2.mb-4.text-center Iniciá sesión en PicME!
+        form(action="/auth/login" method="POST")
 
-  h2 Iniciar sesión
+          .mb-3
+            label.form-label(for="username") Nombre de usuario
+            input.form-control(type="text" id="username" name="username" required placeholder="Tu nombre de usuario")
 
-  form
+          .mb-3
+            label.form-label(for="password") Contraseña
+            input.form-control(type="password" id="password" name="password" required placeholder="Tu contraseña")
 
-    .mb-3
-      label.form-label Usuario
-      input.form-control(type="text")
-
-    .mb-3
-      label.form-label Contraseña
-      input.form-control(type="password")
-
-    button.btn.btn-primary
-      | Ingresar
+          button.btn.btn-primary.w-100.m(type="submit")
+            | Ingresar
+        p.text.text-center
+            | ¿No tenés cuenta?
+            a.ms-1(href="/auth/register") 
+            | Registrate

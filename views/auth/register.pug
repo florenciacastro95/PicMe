@@ -1,29 +1,39 @@
 extends ../layouts/layout
 
 block metadata
-  title Registrarse
+  title Registrarse -PicME!
+  meta(name="description" content="Crea tu cuenta en PicME!")
 
 block content
+  .row.justify-content-center
+    .col-md-6
+      .card.p-4
+          h2.mb-4.text-center Unite a PicME!
+          p Todos podemos ser elegidos.
 
-  h2 Crear cuenta
+          form(action="/auth/register" method="POST")
 
-  form(action="/auth/register" method="POST")
+            .mb-3
+              label.form-label Usuario
+              input.form-control(type="text" name="username" id="username" required)
 
-    .mb-3
-      label.form-label Usuario
-      input.form-control(type="text" name="username")
+            .mb-3
+              label.form-label Email
+              input.form-control(type="email" name="email" id="email" required)
 
-    .mb-3
-      label.form-label Email
-      input.form-control(type="email" name="email")
+            .mb-3
+              label.form-label(for="nombre") Nombre
+              input.form-control(type="text" name="nombre" id="nombre" required)
+            .mb-3
+              label.form-label Contraseña
+              input.form-control(type="password" name="password" id="password" required)
+            .mb-3
+              label.form-label Connfirmar contraseña
+              input.form-control(type="password" name="password_conf" id="password-conf" required)
+            button.btn.btn-success.w-100(type="submit")
+              | Registrarse
 
-    .mb-3
-      label.form-label Contraseña
-      input.form-control(type="password" name="password")
-
-    button.btn.btn-primary
-      | Registrarse
-
-  p.mt-3
-    | ¿Ya tenés cuenta?
-    a.ms-1(href="/auth/login") Iniciar sesión
+          p.text-center.mt-3
+            | ¿Ya tenés cuenta?
+            a.ms-1(href="/auth/login") 
+            | Iniciar sesión

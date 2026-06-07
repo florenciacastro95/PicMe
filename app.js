@@ -7,9 +7,14 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
+const { sequelize } = require('./models');
+
 //importar rutas
 const homeRoutes = require('./routes/home');
 const authRoutes = require('./routes/auth');
+
+
+const { configVarLocals } = require('./middlewares/auth');
 
 //app
 const app = express();
@@ -32,20 +37,37 @@ app.use(session({
 
 
 //middleare para pasarusuario
-app.use((req,res,next)=>{
-    res.locals.user = req.session.user || null;
-    next();
-});
+app.use(configVarLocals);
 
 // rutas
 app.use('/', homeRoutes);
 app.use('/auth', authRoutes);
 
+app.use((req, res) => {
+    res.status(404).send('404 Pág no encontrada');
+});
+app.use((req,res,next)=>{
+
+    res.locals.user = req.session.user || null;
+    res.locals.alert = req.session.alert || null;
+
+    delete req.session.alert;
+
+    next();
+
+});
 // puerto
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(`servidor andando en puerto ${PORT}`);
-});
+sequelize.authenticate()
+    .then(() => {
+        console.log('conectado a Postgres');
+        app.listen(PORT, () => {
+            console.log(`servidor andando en puerto ${PORT}`);
+        });
+    })
+    .catch((error)=>{
+        console.log('error al conectar conn la db', error);
+    });
 
 module.exports = app;
