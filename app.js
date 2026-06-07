@@ -3,6 +3,8 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+//importar rutas
+const homeRoutes = require('./routes/home');
 
 const app = express();
 
@@ -12,13 +14,9 @@ app.set('views', path.join(__dirname, 'views'));
 
 // archivos estaticos
 app.use(express.static(path.join(__dirname, 'public')));
+// rutas
+app.use('/', homeRoutes);
 
-// ruta provisoria 
-app.get('/', (req, res) => {
-    res.render('index', {
-        title: 'PICME'
-    });
-});
 
 // puerto
 const PORT = process.env.PORT || 3000;
