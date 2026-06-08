@@ -3,7 +3,14 @@ extends ../layouts/layout
 block content
 
   h2= publicacion.titulo
-
+  
+  if publicacion.imagenes.length > 0
+    .row
+      each imagen in publicacion.imagenes
+        .col-md-4.mb-3
+          img.img-fluid.rounded(
+            src=imagen.url
+          )
   p= publicacion.descripcion
 
   p

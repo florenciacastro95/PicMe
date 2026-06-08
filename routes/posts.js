@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const upload = require('../middlewares/upload');
 const postController = require('../controllers/postController');
 const { isAuthenticated } = require('../middlewares/auth');
 
@@ -10,6 +10,7 @@ router.get('/create',
 
 router.post('/create',
     isAuthenticated,
+    upload.array('imagenes', 10),
     postController.create);
 
 router.get('/:id',

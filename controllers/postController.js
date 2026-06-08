@@ -1,5 +1,4 @@
-const { Publicacion, Usuario } = require('../models');
-
+const { Publicacion, Usuario, Imagen } = require('../models');
 exports.showCreate = (req, res) => {
     res.render('posts/create');
 };
@@ -7,13 +6,17 @@ exports.showCreate = (req, res) => {
 exports.create = async (req, res) => {
     try {
         const { titulo, descripcion } = req.body;
-
-        await Publicacion.create({
+        const publicacion = await Publicacion.create({
             usuario_id: req.session.user.id,
             titulo,
             descripcion
         });
-
+        console.log(req.files);
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                await Imagen.create({ publicacion_id: publicacion.id, url: `/uploads/${file.filename}` });
+            }
+        }
         res.redirect('/');
     } catch (error) {
         console.log(error);
@@ -28,6 +31,10 @@ exports.show = async (req, res) => {
             include: [{
                 model: Usuario,
                 as: 'usuario'
+            },
+            {
+                model: Imagen,
+                as: 'imagenes'
             }]
         });
 
