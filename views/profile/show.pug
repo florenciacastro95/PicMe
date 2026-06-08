@@ -1,0 +1,25 @@
+extends ../layouts/layout
+
+block content
+  h2= perfil.username
+  p= perfil.nombre
+  hr
+  h4 Publicaciones
+  if publicaciones.length > 0
+
+    .row
+      each pub in publicaciones
+        .col-md-4.mb-3
+          .card
+            if pub.imagenes.length > 0
+
+              img.card-img-top(
+                src=pub.imagenes[0].url
+              )
+            .card-body
+              h5.card-title
+                a(
+                  href="/posts/" + pub.id
+                )= pub.titulo
+  else
+    p No hay publicaciones.

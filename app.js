@@ -13,7 +13,7 @@ const { sequelize } = require('./models');
 const homeRoutes = require('./routes/home');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
-
+const profileRoutes = require('./routes/profile')
 const { configVarLocals } = require('./middlewares/auth');
 
 //app
@@ -43,6 +43,7 @@ app.use(configVarLocals);
 app.use('/', homeRoutes);
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
+app.use('/profile', profileRoutes);
 
 app.use((req, res) => {
     res.status(404).send('404 Pág no encontrada');

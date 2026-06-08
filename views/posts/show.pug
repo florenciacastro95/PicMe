@@ -15,7 +15,7 @@ block content
 
   p
     strong Autor:
-    |  #{publicacion.usuario.username}
+      a(href="/profile/" + publicacion.usuario.username)=publicacion.usuario.username
 
   if user && user.id === publicacion.usuario_id
 
