@@ -7,6 +7,7 @@ block content
   form(
     action="/posts/" + publicacion.id + "/edit"
     method="POST"
+    enctype="multipart/form-data"
   )
 
     .mb-3
@@ -24,6 +25,34 @@ block content
       textarea.form-control(
         name="descripcion"
       )= publicacion.descripcion
+    h4 Imágenes actuales
 
+    if publicacion.imagenes && publicacion.imagenes.length > 0
+
+      each imagen in publicacion.imagenes
+
+        .mb-3
+          img(
+            src=imagen.url
+            width="200"
+          )
+
+          .form-check
+            input.form-check-input(
+              type="checkbox"
+              name="imagenesEliminar"
+              value=imagen.id
+            )
+
+            label.form-check-label
+              | Eliminar imagen
+    .mb-3
+      label.form-label Agregar imágenes
+
+      input.form-control(
+        type="file"
+        name="imagenes"
+        multiple
+      )
     button.btn.btn-primary
       | Guardar cambios

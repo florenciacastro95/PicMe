@@ -54,7 +54,14 @@ exports.show = async (req, res) => {
 
 exports.showEdit = async (req, res) => {
 
-    const publicacion = await Publicacion.findByPk(req.params.id);
+    const publicacion = await Publicacion.findByPk(req.params.id,
+        {
+            include: [{
+                model: Imagen,
+                as: 'imagenes'
+            }]
+        }
+    );
 
     if (!publicacion) {
         return res.redirect('/');
@@ -86,7 +93,34 @@ exports.update = async (req, res) => {
         titulo: req.body.titulo,
         descripcion: req.body.descripcion
     });
+    const { imagenesEliminar } = req.body;
 
+    if (imagenesEliminar) {
+
+        const ids = Array.isArray(imagenesEliminar)
+            ? imagenesEliminar
+            : [imagenesEliminar];
+
+        await Imagen.destroy({
+            where: {
+                id: ids,
+                publicacion_id: publicacion.id
+            }
+        });
+
+    }
+    if (req.files && req.files.length > 0) {
+
+        for (const file of req.files) {
+
+            await Imagen.create({
+                publicacion_id: publicacion.id,
+                url: `/uploads/${file.filename}`
+            });
+
+        }
+
+    }
     res.redirect(`/posts/${publicacion.id}`);
 
 };
@@ -102,7 +136,12 @@ exports.destroy = async (req, res) => {
     if (publicacion.usuario_id !== req.session.user.id) {
         return res.redirect('/');
     }
+    await Imagen.destroy({
+    where: {
+        publicacion_id: publicacion.id
+    }
 
+});
     await publicacion.destroy();
 
     res.redirect('/');

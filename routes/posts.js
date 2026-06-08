@@ -22,6 +22,7 @@ router.get('/:id/edit',
 
 router.post('/:id/edit',
     isAuthenticated,
+    upload.array('imagenes', 10),
     postController.update);
 
 router.post('/:id/delete',
