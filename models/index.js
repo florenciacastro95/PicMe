@@ -5,7 +5,9 @@ const Imagen = require('./Imagen');
 const Comentario = require('./Comentario');
 const Tag = require('./Tag');
 const PublicacionTag = require('./PublicacionTag');
-const Rating = require('./Rating')
+const Rating = require('./Rating');
+const Seguidor = require('./Seguidor');
+
 Usuario.hasMany(Publicacion, {
     foreignKey: 'usuario_id',
     as: 'publicaciones'
@@ -66,7 +68,7 @@ Usuario.hasMany(Rating, {
 });
 Rating.belongsTo(Usuario, { 
     foreignKey: 'usuario_id',
-    as: 'ratings'
+    as: 'usuario'
 });
 
 Imagen.hasMany(Rating, {
@@ -78,6 +80,29 @@ Rating.belongsTo(Imagen, {
     foreignKey: 'imagen_id',
     as: 'imagen'
 });
+Usuario.belongsToMany(Usuario, {
+    through: Seguidor,
+    as: 'seguidos',
+    foreignKey: 'seguidor_id',
+    otherKey: 'seguido_id'
+});
+
+Usuario.belongsToMany(Usuario, {
+    through: Seguidor,
+    as: 'seguidores',
+    foreignKey: 'seguido_id',
+    otherKey: 'seguidor_id'
+});
+
+Seguidor.belongsTo(Usuario, {
+    foreignKey: 'seguidor_id',
+    as: 'seguidor'
+});
+
+Seguidor.belongsTo(Usuario, {
+    foreignKey: 'seguido_id',
+    as: 'seguido'
+});
 
 module.exports = {
     sequelize,
@@ -87,5 +112,6 @@ module.exports = {
     Comentario,
     Tag,
     PublicacionTag,
-    Rating
+    Rating,
+    Seguidor
 };

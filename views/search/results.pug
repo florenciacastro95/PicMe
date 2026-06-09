@@ -1,0 +1,56 @@
+extends ../layouts/layout
+
+block metadata
+  title= query ? 'Buscar: ' + query + ' - PicME!' : 'Buscar - PicME!'
+
+block content
+  if query
+    p.text-muted.mb-4
+      | Resultados para:
+      strong.ms-1 #{query}
+      if totalResults
+        |  — #{totalResults} encontrados
+
+  if publicaciones && publicaciones.length > 0
+    .row
+      each pub in publicaciones
+        .col-md-6.col-lg-4.mb-4
+          .card.h-100
+            if pub.imagenes && pub.imagenes.length > 0
+              img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
+            else
+              .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
+                | Sin imagen
+            .card-body
+              h5.card-title
+                a(href="/posts/" + pub.id)= pub.titulo
+              if pub.descripcion
+                p.card-text= pub.descripcion
+              if pub.tags && pub.tags.length > 0
+                p.mb-2
+                  each tag in pub.tags.slice(0, 3)
+                    a.badge.bg-secondary.me-1.text-decoration-none(href="/search?q=" + tag.nombre)= '#' + tag.nombre
+              p.text-muted.small.mb-0
+                | Por
+                a.ms-1(href="/profile/" + pub.usuario.username)= pub.usuario.username
+
+    if totalPages > 1
+      nav.mt-4
+        ul.pagination.justify-content-center
+          if hasPrevPage
+            li.page-item
+              a.page-link(href="/search?q=" + query + "&page=" + (currentPage - 1)) Anterior
+
+          - for (let i = 1; i <= totalPages; i++)
+            li.page-item(class=i === currentPage ? 'active' : '')
+              a.page-link(href="/search?q=" + query + "&page=" + i)= i
+
+          if hasNextPage
+            li.page-item
+              a.page-link(href="/search?q=" + query + "&page=" + (currentPage + 1)) Siguiente
+  else
+    .alert.alert-info
+      if query
+        | No se encontraron resultados.
+      else
+        | Escribi un termino para buscar.

@@ -1,46 +1,108 @@
-const { Publicacion, Tag, Usuario } = require('../models');
+const { Publicacion, Tag, Usuario, Imagen } = require('../models');
 const { Op } = require('sequelize');
 
 const searchController = {
     index: async (req, res) => {
         try {
             const q = req.query.q ? req.query.q.trim() : '';
+            const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+            const limit = 12;
+            const offset = (page - 1) * limit;
+
             if (!q) {
                 return res.render('search/results', {
+                    title: 'Buscar - PicME!',
                     publicaciones: [],
-                    query: q
+                    query: '',
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalResults: 0,
+                    hasNextPage: false,
+                    hasPrevPage: false
                 });
             }
-            const publicaciones = await Publicacion.findAll({
+            const searchTerm = q.toLowerCase();
+            const baseIncludes = [
+                {
+                    model: Imagen,
+                    as: 'imagenes'
+                },
+                {
+                    model: Usuario,
+                    as: 'usuario',
+                    attributes: ['id', 'username', 'avatar', 'nombre']
+                },
+                {
+                    model: Tag,
+                    as: 'tags',
+                    through: { attributes: [] }
+                }
+            ];
+            const byContent = await Publicacion.findAll({
                 where: {
-
+                    activo: true,
                     [Op.or]: [
-                        { titulo: { [Op.iLike]: `%${q}%` } },
-                        { descripcion: { [Op.iLike]: `%${q}%` } }
+                        { titulo: { [Op.iLike]: `%${searchTerm}%` } },
+                        { descripcion: { [Op.iLike]: `%${searchTerm}%` } }
                     ]
                 },
-                include: [
-                    {
-                        model: Tag,
-                        as: 'Tags', 
-                        where: {
-                            nombre: { [Op.iLike]: `%${q}%` }
-                        },
-                        required: false 
-                    },
-                    {
-                        model: Usuario,
-                        as: 'Usuario', 
-                        attributes: ['id', 'nombre'] 
-                    }
-                ],
-                order: [['created_at', 'DESC']], 
-            });
-            return res.render('search/results', {
-                publicaciones,
-                query: q
+                include: baseIncludes,
+                order: [['created_at', 'DESC']]
             });
 
+            const byTags = await Publicacion.findAll({
+                where: { activo: true },
+                include: [
+                    { model: Imagen, as: 'imagenes' },
+                    { model: Usuario, as: 'usuario', attributes: ['id', 'username', 'avatar', 'nombre'] },
+                    {
+                        model: Tag,
+                        as: 'tags',
+                        where: { nombre: { [Op.iLike]: `%${searchTerm}%` } },
+                        through: { attributes: [] }
+                    }
+                ],
+                order: [['created_at', 'DESC']]
+            });
+
+            const byUser = await Publicacion.findAll({
+                where: { activo: true },
+                include: [
+                    { model: Imagen, as: 'imagenes' },
+                    {
+                        model: Usuario,
+                        as: 'usuario',
+                        attributes: ['id', 'username', 'avatar', 'nombre'],
+                        where: { username: { [Op.iLike]: `%${searchTerm}%` } }
+                    },
+                    { model: Tag, as: 'tags', through: { attributes: [] } }
+                ],
+                order: [['created_at', 'DESC']]
+            });
+
+            const combinadas = [];
+            const ids = new Set();
+
+            for (const pub of [...byContent, ...byTags, ...byUser]) {
+                if (!ids.has(pub.id)) {
+                    ids.add(pub.id);
+                    combinadas.push(pub);
+                }
+            }
+
+            const totalResults = combinadas.length;
+            const totalPages = Math.ceil(totalResults / limit);
+
+            return res.render('search/results', {
+                title: `Buscar: ${q} - PicME!`,
+                publicaciones: combinadas.slice(offset, offset + limit),
+                query: q,
+                currentPage: page,
+                totalPages,
+                totalResults,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            });
         } catch (error) {
             console.error('Error en el buscador:', error);
             return res.status(500).render('errors/500');

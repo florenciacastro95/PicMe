@@ -1,25 +1,66 @@
 extends ../layouts/layout
 
+block metadata
+  title= perfil.username + ' - PicME!'
+
 block content
-  h2= perfil.username
-  p= perfil.nombre
-  hr
-  h4 Publicaciones
-  if publicaciones.length > 0
+  .row.justify-content-center
+    .col-lg-10
+      .card.mb-4
+        .card-body.text-center
+          if perfil.avatar
+            img.rounded-circle.mb-3(src=perfil.avatar alt=perfil.username width="96" height="96")
+          else
+            .rounded-circle.bg-secondary.mx-auto.mb-3(style="width: 96px; height: 96px;")
+          h2.mb-1= perfil.username
 
-    .row
-      each pub in publicaciones
-        .col-md-4.mb-3
-          .card
-            if pub.imagenes.length > 0
+          if perfil.nombre
+            p.text-muted.mb-2= perfil.nombre
 
-              img.card-img-top(
-                src=pub.imagenes[0].url
-              )
-            .card-body
+          if perfil.bio
+            p.mb-3= perfil.bio
+          .d-flex.justify-content-center.gap-3.flex-wrap.mb-3
+            a.btn.btn-outline-primary(href="/profile/" + perfil.username + "/followers")
+              | Seguidores
+              span.ms-2.badge.bg-primary= seguidoresCount
+            a.btn.btn-outline-primary(href="/profile/" + perfil.username + "/following")
+              | Siguiendo
+              span.ms-2.badge.bg-primary= seguidosCount
+
+          if user && !isOwnProfile
+            if isFollowing
+              form(action="/follow/" + perfil.id + "/unfollow" method="POST")
+                button.btn.btn-warning(type="submit") Dejar de seguir
+            else
+              form(action="/follow/" + perfil.id method="POST")
+                button.btn.btn-primary(type="submit") Seguir
+
+  h4.mb-3 Publicaciones
+    if publicaciones && publicaciones.length > 0
+      .row
+        each pub in publicaciones
+          .col-md-6.col-lg-4.mb-4
+            .card.h-100
+              if pub.imagenes &&pub.imagenes.length > 0
+                img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
+              else
+                .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
+                | Sin imagen
+              .card-body
+                h5.card-title
+                  a(
+                        href="/posts/" + pub.id
+                  )= pub.titulo
+                .card-body
               h5.card-title
-                a(
-                  href="/posts/" + pub.id
-                )= pub.titulo
-  else
-    p No hay publicaciones.
+                a(href="/posts/" + pub.id)= pub.titulo
+              
+              if pub.tags && pub.tags.length > 0
+                p.mb-2
+                  each tag in pub.tags.slice(0, 3)
+                    a.badge.bg-secondary.me-1.text-decoration-none(href="/search?q=" + tag.nombre)= '#' + tag.nombre
+              
+              p.text-muted.small.mb-0
+                | #{new Date(pub.created_at).toLocaleDateString('es-ES')}
+    else
+      .alert.alert-secondary No hay publicaciones.

@@ -10,19 +10,43 @@ const Usuario = sequelize.define('Usuario', {
     username: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true
+        unique: true,
+        len: [3, 50],
+        notEmpty: true
     },
     email: {
         type: DataTypes.STRING(100),
         allowNull: false,
-        unique: true
+        unique: true,
+        validate: {
+            isEmail: true,
+            notEmpty: true
+        }
     },
     password: {
         type: DataTypes.STRING(255),
-        allowNull: false
+        allowNull: false,
+        validate: {
+            notEmpty: true,
+            len: [6, 255]
+        }
+    },
+    bio: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    avatar: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: null
     },
     nombre: {
-        type: DataTypes.STRING(100)
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    activo: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
     }
 }, {
     tableName: 'usuarios'
