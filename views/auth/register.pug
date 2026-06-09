@@ -9,27 +9,28 @@ block content
     .col-md-6
       .card.p-4
           h2.mb-4.text-center Unite a PicME!
-          p Todos podemos ser elegidos.
+          p.text-center.text-muted Todos podemos ser elegidos.
 
           form(action="/auth/register" method="POST")
 
             .mb-3
-              label.form-label Usuario
-              input.form-control(type="text" name="username" id="username" required)
-
+              label.form-label(for="username") Usuario
+              input.form-control(type="text" name="username" id="username" required minlength="3" maxlength="50")
+              .form-text Mínimo 3 caracteres
             .mb-3
-              label.form-label Email
+              label.form-label(for="email") Email
               input.form-control(type="email" name="email" id="email" required)
 
             .mb-3
               label.form-label(for="nombre") Nombre
-              input.form-control(type="text" name="nombre" id="nombre" required)
+              input.form-control(type="text" name="nombre" id="nombre")
             .mb-3
-              label.form-label Contraseña
-              input.form-control(type="password" name="password" id="password" required)
+              label.form-label(for="password") Contraseña
+              input.form-control(type="password" name="password" id="password" required minlength="3")
+              .form-text La contraseña debe tener al menos 3 caracteres
             .mb-3
-              label.form-label Connfirmar contraseña
-              input.form-control(type="password" name="password_conf" id="password-conf" required)
+              label.form-label(for="password-conf") Confirmar contraseña
+              input.form-control(type="password" name="password_conf" id="password-conf" required minlength="3")
             button.btn.btn-success.w-100(type="submit")
               | Registrarse
 

@@ -45,7 +45,8 @@ block content
         method="POST")
         .mb-3
           textarea.form-control(name="contenido"
-            required)
+            required
+            maxlength="1000")
         button.btn.btn-primary
           | Comentar
     else
@@ -65,7 +66,10 @@ block content
     else
       p.text-muted Todavía no hay comentarios.
   else
-    p.text-muted Los comentarios están deshabilitados para esta publicación.
+    .alert.alert-secondary.mt-3
+      strong Comentarios cerrados.
+      br
+      | El autor deshabilitó los comentarios para esta publicación.
 
   if user && user.id === publicacion.usuario_id
     hr

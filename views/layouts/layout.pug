@@ -15,21 +15,28 @@ html(lang="es")
     nav.navbar.navbar-expand-lg.navbar-light.bg-light
       .container
         a.navbar-brand(href="/") PicME!
-        form.d-flex.mx-auto.my-2.my-lg-0(action="/search" method="GET" style="max-width: 400px; width: 100%;")
-          input.form-control.me-2(
-            type="search"
-            name="q"
-            placeholder="Buscar títulos, descripciones o tags..."
-            aria-label="Buscar"
-            value=query || ''
-          )
-          button.btn.btn-outline-primary(type="submit") Buscar
-        ul.navbar-nav.ms-auto
-          li.nav-item
-            a.nav-link(href="/auth/login") Iniciar sesión
+        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
+          span.navbar-toggler-icon
+        #navbarNav.collapse.navbar-collapse
+          form.d-flex.mx-auto.my-2.my-lg-0(action="/search" method="GET" style="max-width: 400px; width: 100%;")
+            input.form-control.me-2(
+              type="search"
+              name="q"
+              placeholder="Buscar títulos, descripciones o tags..."
+              aria-label="Buscar"
+              value=(query || '')
+            )
+            button.btn.btn-outline-primary(type="submit") Buscar
+          ul.navbar-nav.ms-auto
+            li.nav-item
+              a.nav-link(href="/auth/login") Iniciar sesión
 
-          li.nav-item
-            a.nav-link(href="/auth/register") Registrarse
+            li.nav-item
+              a.nav-link(href="/auth/register") Registrarse
     .container.mt-4
+      if alert
+        .alert.alert-dismissible.fade.show(class="alert-" + alert.type role="alert")
+          | #{alert.text}
+          button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Cerrar")
       block content
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js")

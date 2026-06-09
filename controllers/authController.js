@@ -2,19 +2,27 @@ const bcrypt = require('bcrypt');
 const { Usuario } = require('../models');
 const sequelize = require('../config/database');
 exports.showLogin = (req, res) => {
-    res.render('auth/login');
+    res.render('auth/login',
+        {
+            title: 'Iniciar sesión - PicME!'
+        }
+    );
 };
 
 exports.showRegister = (req, res) => {
-    res.render('auth/register');
+    res.render('auth/register',
+        {
+            title: 'Registrarse - PicME!'
+        }
+    );
 };
 
 exports.login = async (req, res) => {
     try {
         console.log("esta llamandose a auth controller login")
-        const { username, password } = req.body;
         console.log(req.body);
-
+        
+        const { username, password } = req.body;
         //campos vacios
         if (!username || !password) {
             req.session.alert = {
@@ -23,17 +31,7 @@ exports.login = async (req, res) => {
             };
             return res.redirect('/auth/login');
         }
-        /*
-        const usuarios = await Usuario.findAll();
-
-        console.log(
-            usuarios.map(u => u.toJSON())
-        );*/
-        const [usuarios] = await sequelize.query(
-            'SELECT * FROM usuarios'
-        );
-
-console.log(usuarios);
+        
         const user = await Usuario.findOne({
             where: { username }
         });
@@ -75,9 +73,9 @@ console.log(usuarios);
         req.session.alert = {
             type: 'danger',
             text: 'Hubo un error al iniciar sesión.'
-        };
+        };return res.redirect('/');
     }
-    res.redirect('/');
+    
 };
 
 exports.register = async (req, res) => {
@@ -157,7 +155,7 @@ exports.register = async (req, res) => {
             text: 'Usuario registrado correctamente. Ahora podés iniciar sesión.'
         };
 
-        res.redirect('/auth/login');
+        return res.redirect('/auth/login');
 
     } catch (error) {
         console.log("error al registrar usuario en authController:register" + error);
@@ -166,7 +164,7 @@ exports.register = async (req, res) => {
             text: 'Error al registrar el usuario.'
         };
 
-        res.redirect('/auth/register');
+        return res.redirect('/auth/register');
     }
 };
 
@@ -175,7 +173,11 @@ exports.register = async (req, res) => {
 
 
 exports.logout = (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/');
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error al cerrar sesión:', err);
+        }
+        res.clearCookie('connect.sid'); 
+        return res.redirect('/auth/login'); 
     });
 };

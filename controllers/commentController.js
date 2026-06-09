@@ -1,4 +1,4 @@
-const { Comentario } = require('../models');
+const { Comentario, Publicacion } = require('../models');
 
 const commentController = {
     create: async (req, res) => {
@@ -6,13 +6,22 @@ const commentController = {
             if (!req.body.contenido || req.body.contenido.trim() === '') {
                 return res.redirect(req.get('Referrer') || '/');
             }
+
+            const publicacion =await Publicacion.findByPk(req.params.id);
+            if (!publicacion) {
+                return res.status(404).render('errors/404');
+            }
+            if (!publicacion.comentarios_habilitados) {
+                return res.redirect('/posts/' + publicacion.id);
+            }
+
             await Comentario.create({
                 publicacion_id: req.params.id,
                 usuario_id: req.session.user.id,
                 contenido: req.body.contenido
             });
             return res.redirect(req.get('Referrer') || '/');
-            
+
         } catch (error) {
             console.error('Error al crear el comentario:', error);
             return res.status(500).render('errors/500');
