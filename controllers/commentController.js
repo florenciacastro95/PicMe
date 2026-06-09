@@ -4,14 +4,14 @@ const commentController = {
     create: async (req, res) => {
         try {
             if (!req.body.contenido || req.body.contenido.trim() === '') {
-                return res.redirect('back');
+                return res.redirect(req.get('Referrer') || '/');
             }
             await Comentario.create({
                 publicacion_id: req.params.id,
                 usuario_id: req.session.user.id,
                 contenido: req.body.contenido
             });
-            return res.redirect('back');
+            return res.redirect(req.get('Referrer') || '/');
             
         } catch (error) {
             console.error('Error al crear el comentario:', error);
@@ -30,7 +30,7 @@ const commentController = {
                 return res.redirect('/');
             }
             await comentario.destroy();
-            return res.redirect('back');
+            return res.redirect(req.get('Referrer') || '/');
         } catch (error) {
             console.error('Error al eliminar el comentario:', error);
             return res.status(500).render('errors/500');

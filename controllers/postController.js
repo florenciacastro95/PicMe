@@ -1,4 +1,4 @@
-const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating } = require('../models');
 exports.showCreate = (req, res) => {
     res.render('posts/create');
 };
@@ -46,7 +46,11 @@ exports.show = async (req, res) => {
             },
             {
                 model: Imagen,
-                as: 'imagenes'
+                as: 'imagenes',
+                include: [{
+                        model: Rating,
+                        as: 'ratings' 
+                }]
             },
             {
                 model: Tag,
@@ -59,15 +63,28 @@ exports.show = async (req, res) => {
                     {
                         model: Usuario,
                         as: 'usuario'
-                    }]
+                    }
+                ]
             }
-            ]
+        ]
         });
 
         if (!publicacion) {
             return res.redirect('/');
         }
-
+        const publicacionPlana = publicacion.get({ plain: true });
+        const userId = req.session.user ? req.session.user.id : null;
+        if (publicacionPlana.imagenes) {
+            publicacionPlana.imagenes.forEach(imagen => {
+                const listaRatings = imagen.ratings || [];
+                const total = listaRatings.length;
+                const suma = listaRatings.reduce((acc, r) => acc + r.puntuacion, 0);
+                imagen.totalVotos = total;
+                imagen.promedio = total > 0 ? (suma / total).toFixed(1) : '0.0';
+                const miVoto = userId ? listaRatings.find(r => r.usuario_id === userId) : null;
+                imagen.miValoracion = miVoto ? miVoto.puntuacion : null;
+            });
+        }
         res.render('posts/show', {
             publicacion
         });
