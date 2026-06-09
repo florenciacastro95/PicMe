@@ -1,4 +1,4 @@
-const { Publicacion, Usuario } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag} = require('../models');
 
 exports.index = async (req, res) => {
 
@@ -6,12 +6,21 @@ exports.index = async (req, res) => {
         include: [{
             model: Usuario,
             as: 'usuario'
-        }],
-        order: [['created_at', 'DESC']]
-    });
+        },
+        {
+            model: Tag,
+            as: 'tags'
+        },
+        {
+            model: Imagen,
+            as: 'imagenes'
+        }
+        ],
+    order: [['created_at', 'DESC']]
+});
 
-    res.render('home/index', {
-        publicaciones
-    });
+res.render('home/index', {
+    publicaciones
+});
 
 };

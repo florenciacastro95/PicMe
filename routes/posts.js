@@ -29,4 +29,9 @@ router.post('/:id/delete',
     isAuthenticated,
     postController.destroy);
 
+router.post(
+    '/:id/habcomments',
+    isAuthenticated,
+    postController.changeComments
+);
 module.exports = router;

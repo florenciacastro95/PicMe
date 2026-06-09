@@ -64,5 +64,8 @@ module.exports = {
     sequelize,
     Usuario,
     Publicacion,
-    Imagen
+    Imagen,
+    Comentario,
+    Tag,
+    PublicacionTag
 };

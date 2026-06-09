@@ -15,6 +15,15 @@ html(lang="es")
     nav.navbar.navbar-expand-lg.navbar-light.bg-light
       .container
         a.navbar-brand(href="/") PicME!
+        form.d-flex.mx-auto.my-2.my-lg-0(action="/search" method="GET" style="max-width: 400px; width: 100%;")
+          input.form-control.me-2(
+            type="search"
+            name="q"
+            placeholder="Buscar títulos, descripciones o tags..."
+            aria-label="Buscar"
+            value=query || ''
+          )
+          button.btn.btn-outline-primary(type="submit") Buscar
         ul.navbar-nav.ms-auto
           li.nav-item
             a.nav-link(href="/auth/login") Iniciar sesión

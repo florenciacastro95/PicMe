@@ -1,4 +1,4 @@
-const { Publicacion, Usuario, Imagen } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario } = require('../models');
 exports.showCreate = (req, res) => {
     res.render('posts/create');
 };
@@ -15,6 +15,18 @@ exports.create = async (req, res) => {
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
                 await Imagen.create({ publicacion_id: publicacion.id, url: `/uploads/${file.filename}` });
+            }
+        }
+        //-*-*
+        if (req.body.tags) {
+            const tags = req.body.tags.split(',').map(t => t.trim()).filter(Boolean);
+
+            for (const nombreTag of tags) {
+
+                const [tag] = await Tag.findOrCreate({ where: { nombre: nombreTag } });
+                await PublicacionTag.findOrCreate({
+                    where: { publicacion_id: publicacion.id, tag_id: tag.id }
+                });
             }
         }
         res.redirect('/');
@@ -35,7 +47,21 @@ exports.show = async (req, res) => {
             {
                 model: Imagen,
                 as: 'imagenes'
-            }]
+            },
+            {
+                model: Tag,
+                as: 'tags'
+            },
+            {
+                model: Comentario,
+                as: 'comentarios',
+                include: [
+                    {
+                        model: Usuario,
+                        as: 'usuario'
+                    }]
+            }
+            ]
         });
 
         if (!publicacion) {
@@ -125,6 +151,26 @@ exports.update = async (req, res) => {
 
 };
 
+exports.changeComments = async(req,res)=>{
+
+    const publicacion =
+        await Publicacion.findByPk(req.params.id);
+
+    if(publicacion.usuario_id !== req.session.user.id){
+        return res.redirect('/');
+    }
+
+    await publicacion.update({
+
+        comentarios_habilitados:
+            !publicacion.comentarios_habilitados
+
+    });
+
+    res.redirect('/posts/' + publicacion.id);
+
+};
+
 exports.destroy = async (req, res) => {
 
     const publicacion = await Publicacion.findByPk(req.params.id);
@@ -137,11 +183,11 @@ exports.destroy = async (req, res) => {
         return res.redirect('/');
     }
     await Imagen.destroy({
-    where: {
-        publicacion_id: publicacion.id
-    }
+        where: {
+            publicacion_id: publicacion.id
+        }
 
-});
+    });
     await publicacion.destroy();
 
     res.redirect('/');

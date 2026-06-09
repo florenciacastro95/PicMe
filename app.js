@@ -13,7 +13,8 @@ const { sequelize } = require('./models');
 const homeRoutes = require('./routes/home');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
-const profileRoutes = require('./routes/profile')
+const profileRoutes = require('./routes/profile');
+const commentRoutes = require('./routes/comments');
 const { configVarLocals } = require('./middlewares/auth');
 
 //app
@@ -44,7 +45,7 @@ app.use('/', homeRoutes);
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/profile', profileRoutes);
-
+app.use('/comments', commentRoutes)
 app.use((req, res) => {
     res.status(404).send('404 Pág no encontrada');
 });
@@ -66,6 +67,8 @@ const PORT = process.env.PORT || 3000;
 sequelize.authenticate()
     .then(() => {
         console.log('conectado a Postgres');
+        //await sequelize.sync({alter:true});
+        console.log('tablas liostas')
     })
     .catch((error)=>{
         console.log('error al conectar conn la db', error);

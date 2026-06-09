@@ -12,21 +12,62 @@ block content
             src=imagen.url
           )
   p= publicacion.descripcion
-
+  if publicacion.tags.length > 0
+    p
+      strong Tags:
+      each tag in publicacion.tags
+        a.badge.bg-secondary.me-1(
+          href="/search?q=" + tag.nombre
+        )
+          | ##{tag.nombre}
   p
     strong Autor:
       a(href="/profile/" + publicacion.usuario.username)=publicacion.usuario.username
+  hr
+  h4 Comentarios
+  if publicacion.comentarios_habilitados
+    if user
+      form(action="/comments/" + publicacion.id
+        method="POST")
+        .mb-3
+          textarea.form-control(name="contenido"
+            required)
+        button.btn.btn-primary
+          | Comentar
+    else
+      p Iniciá sesión para comentar
+
+    if publicacion.comentarios && publicacion.comentarios.length > 0
+      each comentario in publicacion.comentarios
+        .card.mb-2
+          .card-body
+            strong= comentario.usuario.username
+            p.mt-2= comentario.contenido
+            if user && user.id === comentario.usuario_id
+              form(action="/comments/" + comentario.id + "/delete"
+                method="POST")
+                button.btn.btn-sm.btn-danger
+                  | Eliminar
+    else
+      p.text-muted Todavía no hay comentarios.
+  else
+    p.text-muted Los comentarios están deshabilitados para esta publicación.
 
   if user && user.id === publicacion.usuario_id
+    hr
+    .d-flex.gap-2.mt-3
+      a.btn.btn-warning(href="/posts/" + publicacion.id + "/edit")
+        | Editar
 
-    a.btn.btn-warning(
-      href="/posts/" + publicacion.id + "/edit"
-    )
-      | Editar
-
-    form(
-      action="/posts/" + publicacion.id + "/delete"
-      method="POST"
-    )
+    form(action="/posts/" + publicacion.id + "/delete"
+      method="POST")
       button.btn.btn-danger
         | Eliminar
+    form(action="/posts/" + publicacion.id + "/habcomments"
+      method="POST")
+      if publicacion.comentarios_habilitados
+        button.btn.btn-secondary
+          | Deshabilitar comentarios
+      else
+        button.btn.btn-success
+          | Habilitar comentarios
