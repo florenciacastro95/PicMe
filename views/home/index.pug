@@ -6,15 +6,16 @@ block content
   .text-center
     h1 PicME!
     if user
-      a.btn.btn-success(href="/posts/create")
+      a.btn.btn-success.mb-4(href="/posts/create")
         | Nueva publicación
 
     each pub in publicaciones
-      .card.mb-3
+      .card.mb-3.text-start.mx-auto(style="max-width: 600px;")
         .card-body
           h4
             a(href="/posts/" + pub.id)
               = pub.titulo
           p= pub.descripcion
-          small
-            | Por #{pub.usuario.username}
+          small.text-muted
+            | Por 
+            a(href="/profile/" + pub.usuario.username)= pub.usuario.username

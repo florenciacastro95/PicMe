@@ -1,7 +1,7 @@
 extends ../layouts/layout
 
 block content
-
+  a.btn.btn-sm.btn-outline-secondary.mb-3(href="#" onclick="window.history.back(); return false;") ⬅ Volver
   h2 Editar publicación
 
   form(
@@ -54,5 +54,16 @@ block content
         name="imagenes"
         multiple
       )
+    .mb-3
+      .form-check
+        input.form-check-input(
+          type="checkbox"
+          id="copyright"
+          name="copyright"
+          checked=publicacion.copyright
+        )
+        label.form-check-label(for="copyright")
+          | Imagen con copyright
+          
     button.btn.btn-primary
       | Guardar cambios

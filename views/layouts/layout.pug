@@ -27,12 +27,19 @@ html(lang="es")
               value=(query || '')
             )
             button.btn.btn-outline-primary(type="submit") Buscar
-          ul.navbar-nav.ms-auto
-            li.nav-item
-              a.nav-link(href="/auth/login") Iniciar sesión
+          ul.navbar-nav.ms-auto.align-items-lg-center
+            if user
+              li.nav-item.me-lg-2
+                a.nav-link(href="/profile/" + user.username) Mi perfil
+              li.nav-item
+                form(action="/auth/logout" method="POST" class="d-inline")
+                  button.btn.btn-link.nav-link(type="submit") Cerrar sesión
+            else 
+              li.nav-item
+                a.nav-link(href="/auth/login") Iniciar sesión
 
-            li.nav-item
-              a.nav-link(href="/auth/register") Registrarse
+              li.nav-item
+                a.nav-link(href="/auth/register") Registrarse
     .container.mt-4
       if alert
         .alert.alert-dismissible.fade.show(class="alert-" + alert.type role="alert")

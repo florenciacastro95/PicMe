@@ -173,11 +173,16 @@ exports.register = async (req, res) => {
 
 
 exports.logout = (req, res) => {
+    if (!req.session) {
+        return res.redirect('/auth/login');
+    }
+
     req.session.destroy((err) => {
         if (err) {
             console.error('Error al cerrar sesión:', err);
         }
-        res.clearCookie('connect.sid'); 
+        res.clearCookie('connect.sid', { path: '/' }); 
+        
         return res.redirect('/auth/login'); 
     });
 };

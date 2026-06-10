@@ -11,4 +11,5 @@ router.get('/register', isNotAuthenticated, authController.showRegister);
 router.post('/register', isNotAuthenticated, authController.register);
 
 router.get('/logout', authController.logout);
+router.post('/logout', authController.logout);
 module.exports = router;

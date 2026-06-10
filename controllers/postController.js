@@ -6,12 +6,16 @@ exports.showCreate = (req, res) => {
 exports.create = async (req, res) => {
     try {
         const { titulo, descripcion } = req.body;
+
+        const copyright = req.body.copyright === 'on';
         const publicacion = await Publicacion.create({
             usuario_id: req.session.user.id,
             titulo,
-            descripcion
+            descripcion,
+            copyright
         });
         console.log(req.files);
+
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
                 await Imagen.create({ publicacion_id: publicacion.id, url: `/uploads/${file.filename}` });
@@ -86,7 +90,7 @@ exports.show = async (req, res) => {
             });
         }
         res.render('posts/show', {
-            publicacion
+            publicacion:publicacionPlana
         });
 
     } catch (error) {
@@ -132,9 +136,12 @@ exports.update = async (req, res) => {
         return res.redirect('/');
     }
 
+    const copyright = req.body.copyright === 'on';
+
     await publicacion.update({
         titulo: req.body.titulo,
-        descripcion: req.body.descripcion
+        descripcion: req.body.descripcion,
+        copyright: copyright
     });
     const { imagenesEliminar } = req.body;
 
@@ -164,7 +171,8 @@ exports.update = async (req, res) => {
         }
 
     }
-    res.redirect(`/posts/${publicacion.id}`);
+    const urlPublicacion = `/posts/${publicacion.id}`;
+    res.redirect(urlPublicacion);
 
 };
 
@@ -184,7 +192,8 @@ exports.changeComments = async(req,res)=>{
 
     });
 
-    res.redirect('/posts/' + publicacion.id);
+    const urlPublicacion = '/posts/' + publicacion.id;
+    return res.redirect(urlPublicacion);
 
 };
 

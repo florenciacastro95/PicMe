@@ -9,11 +9,19 @@ const Rating = sequelize.define('Rating', {
     },
     imagen_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'imagenes',
+            key: 'id'
+        }
     },
     usuario_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'usuarios',
+            key: 'id'
+        }
     },
     puntuacion: {
         type: DataTypes.INTEGER,
@@ -27,7 +35,13 @@ const Rating = sequelize.define('Rating', {
     tableName: 'valoraciones',
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    updatedAt: 'updated_at',
+    indexes: [
+        {
+            unique: true,
+            fields: ['imagen_id', 'usuario_id']
+        }
+    ]
 });
 
 module.exports = Rating;
