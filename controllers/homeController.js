@@ -17,17 +17,17 @@ exports.index = async (req, res) => {
             imageInclude.required = true;
         }
 
-        console.log('USUARIO LOGUEADO?', !!user);
-        console.log('IMAGE INCLUDE:', imageInclude);
         const { count, rows: publicaciones } = await Publicacion.findAndCountAll({
             where: { activo: true },
             include: [{
                 model: Usuario,
-                as: 'usuario'
+                as: 'usuario',
+                attributes: ['id', 'username', 'avatar']
             },
             {
                 model: Tag,
-                as: 'tags'
+                as: 'tags',
+                through: { attributes: [] }
             },
                 imageInclude
             ],
@@ -37,18 +37,6 @@ exports.index = async (req, res) => {
             distinct: true
 
         });
-        console.log('=== HOME DESLOGUEADA ===');
-
-        for (const pub of publicaciones) {
-            console.log(
-                JSON.stringify(
-                    pub.toJSON(),
-                    null,
-                    2
-                )
-            );
-        }
-        //////
         const totalPages = Math.ceil(count / limit);
         res.render('home/index', {
             title: 'PicME!',
@@ -61,7 +49,16 @@ exports.index = async (req, res) => {
     }
     catch (err) {
         console.error("Error en la Home:", err);
-        res.status(500).send("internal serverror")
+        req.session.alert = {
+            type: 'danger',
+            text: 'Error al cargar las publicaciones.'
+        };
+        res.render('home/index', {
+            title: 'PicME! - Comparte, mira, pickea :3',
+            publicaciones: [],
+            currentPage: 1,
+            totalPages: 0
+        });
     }
 
 };

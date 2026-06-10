@@ -66,10 +66,14 @@ app.use('/follow', followRoutes);
 
 //errores 404500
 app.use((req, res) => {
-    res.status(404).send('404 Pág no encontrada');
+    res.status(404).render('errors/404', {
+        title: 'Página no encontrada - PicMe!'
+    });
 });
 app.use((err, req, res, next) => {
-    res.status(500).send('Hubo un error interno en el servidor');
+    res.status(500).render('errors/500', {
+        title: 'Error del servidor - PICME'
+    });
 });
 // puerto
 const PORT = process.env.PORT || 3000;

@@ -1,0 +1,16 @@
+extends ../layouts/layout
+
+block metadata
+  title Error del servidor - PICME
+
+block content
+  .container.text-center.py-5
+    i.bi.bi-exclamation-triangle.text-danger(style="font-size: 6rem;")
+    
+    h1.mt-4.display-1.fw-bold.text-danger 500
+    h3.text-secondary Error del servidor
+    p.text-muted Algo salió mal. Por favor intentá nuevamente más tarde.
+
+    a.btn.btn-danger.mt-3(href="/")
+      i.bi.bi-house.me-2
+      | Volver al inicio

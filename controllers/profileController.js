@@ -17,20 +17,19 @@ const show = async (req, res) => {
             req.session.alert = { type: 'danger', text: 'Usuario no encontrado.' };
             return res.redirect('/');
         }
-        const wherePublicaciones = {  
-            usuario_id: usuario.id,   
-            activo: true 
-        };                                 
-
-
-        if (!currentUserId) { 
-            wherePublicaciones.copyright = false; 
+        let imageCondition = {};
+        if (!currentUserId) {
+            imageCondition.copyright = 'sin_copyright';
         }
         const publicaciones =
             await Publicacion.findAll({
-                where: wherePublicaciones,
+                where: { usuario_id: usuario.id, activo: true },
                 include: [
-                    { model: Imagen, as: 'imagenes' },
+                    {
+                        model: Imagen, as: 'imagenes',
+                        where: Object.keys(imageCondition).length > 0 ? imageCondition : undefined,
+                        required: Object.keys(imageCondition).length > 0
+                    },
                     { model: Tag, as: 'tags', through: { attributes: [] } }
                 ],
                 order: [['created_at', 'DESC']]
@@ -61,6 +60,10 @@ const show = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al ver perfil:', error);
+        req.session.alert = {
+            type: 'danger',
+            text: 'Error al cargar el perfil.'
+        };
         return res.redirect('/');
     }
 
@@ -72,7 +75,11 @@ const followers = async (req, res) => {
         const currentUserId = req.session.user ? req.session.user.id : null;
 
         const usuario = await Usuario.findOne({ where: { username, activo: true } });
-        if (!usuario) return res.redirect('/');
+        if (!usuario) {
+            req.session.alert = {
+                type: 'danger',
+                text: 'Usuario no encontrado.'
+            };return res.redirect('/');}
 
         const seguidores = await Seguidor.findAll({
             where: { seguido_id: usuario.id },
@@ -96,10 +103,15 @@ const followers = async (req, res) => {
         return res.render('profile/followers', {
             title: `Seguidores de ${usuario.username} - PicME!`,
             perfil: usuario,
-            seguidores: seguidoresConEstado
+            seguidores: seguidoresConEstado,
+            tipo:seguidores
         });
     } catch (error) {
-        console.error('Error al ver seguidores:',error);
+        console.error('Error al ver seguidores:', error);
+        req.session.alert = {
+            type: 'danger',
+            text: 'Error al cargar seguidores.'
+        };
         return res.redirect('/');
     }
 };
@@ -111,7 +123,11 @@ const following = async (req, res) => {
         const currentUserId = req.session.user ? req.session.user.id : null;
 
         const usuario = await Usuario.findOne({ where: { username, activo: true } });
-        if (!usuario) return res.redirect('/');
+        if (!usuario) {
+            req.session.alert = {
+                type: 'danger',
+                text: 'Usuario no encontrado.'
+            };return res.redirect('/');}
 
         const seguidos = await Seguidor.findAll({
             where: { seguidor_id: usuario.id },
@@ -135,10 +151,15 @@ const following = async (req, res) => {
         return res.render('profile/following', {
             title: `Seguidos por ${usuario.username} - PicME!`,
             perfil: usuario,
-            seguidos: seguidosConEstado
+            seguidos: seguidosConEstado,
+            tipo: 'seguidos'
         });
     } catch (error) {
-        console.error('Error al ver seguidos:',error);
+        console.error('Error al ver seguidos:', error);
+        req.session.alert = {
+            type: 'danger',
+            text: 'Error al cargar seguidos.'
+        };
         return res.redirect('/');
     }
 };

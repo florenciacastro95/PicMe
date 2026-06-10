@@ -1,0 +1,15 @@
+extends ../layouts/layout
+
+block metadata
+  title Página no encontrada - PICME
+
+block content
+  .container.text-center.py-5
+    i.bi.bi-emoji-frown.text-warning(style="font-size: 6rem;")
+    
+    h1.mt-4.display-1.fw-bold.text-dark 404
+    h3.text-secondary Página no encontrada
+    p.text-muted La página que buscás no existe o ha sido movida.
+    a.btn.btn-primary.mt-3(href="/")
+      i.bi.bi-house.me-2
+      | Volver al inicio

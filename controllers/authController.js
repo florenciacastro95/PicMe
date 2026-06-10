@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const { Usuario } = require('../models');
-const sequelize = require('../config/database');
+
 exports.showLogin = (req, res) => {
     res.render('auth/login',
         {
@@ -33,7 +33,7 @@ exports.login = async (req, res) => {
         }
         
         const user = await Usuario.findOne({
-            where: { username }
+            where: { username, activo: true }
         });
         //error usuario/contra
         if (!user) {
@@ -58,7 +58,8 @@ exports.login = async (req, res) => {
             id: user.id,
             username: user.username,
             email: user.email,
-            nombre: user.nombre || null
+            nombre: user.nombre,
+            avatar: user.avatar
         };
 
         req.session.alert = {
@@ -73,14 +74,14 @@ exports.login = async (req, res) => {
         req.session.alert = {
             type: 'danger',
             text: 'Hubo un error al iniciar sesión.'
-        };return res.redirect('/');
+        };return res.redirect('/auth/login');
     }
     
 };
 
 exports.register = async (req, res) => {
     try {
-        console.log("1")
+
         const {
             username,
             email,
@@ -88,15 +89,7 @@ exports.register = async (req, res) => {
             password_conf,
             nombre
         } = req.body;
-        console.log(req.body);
-        console.log("2");
-        console.log({
-            username,
-            email,
-            password,
-            password_conf,
-            nombre
-        })
+
         //alerta campo obligatorio
         if (!username || !email || !password || !password_conf) {
             req.session.alert = {
@@ -105,7 +98,6 @@ exports.register = async (req, res) => {
             };
             return res.redirect('/auth/register');
         }
-        console.log("3");
         //contras que deben coincidir
         if (password !== password_conf) {
             req.session.alert = {
@@ -114,7 +106,15 @@ exports.register = async (req, res) => {
             };
             return res.redirect('/auth/register');
         }
-        console.log("4");
+        //contraseña con al menos 3 caracteres
+        if (password.length < 3) {
+            req.session.alert = {
+                type: 'danger',
+                text: 'La contrasena debe tener al menos 3 caracteres.'
+            };
+            return res.redirect('/auth/register');
+        }
+
         //verificar mail existente
         const userEmail = await Usuario.findOne({
             where: { email }
@@ -183,6 +183,6 @@ exports.logout = (req, res) => {
         }
         res.clearCookie('connect.sid', { path: '/' }); 
         
-        return res.redirect('/auth/login'); 
+        return res.redirect('/'); 
     });
 };
