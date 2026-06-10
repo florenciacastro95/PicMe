@@ -12,7 +12,11 @@ const Tag = sequelize.define('Tag', {
     nombre: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true
+        unique: true,
+        validate: {
+            notEmpty: true,
+            len: [1, 50]
+        }
     }
 
 }, {

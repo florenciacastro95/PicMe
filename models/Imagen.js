@@ -14,6 +14,23 @@ const Imagen = sequelize.define('Imagen', {
     url: {
         type: DataTypes.STRING(255),
         allowNull: false
+    },
+    titulo: {
+        type: DataTypes.STRING(200),
+        allowNull: true
+    },
+    descripcion: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    copyright: {
+        type: DataTypes.ENUM('copyright', 'sin_copyright'),
+        //defaultValue: 'sin_copyright',
+        allowNull: false
+    },
+    orden: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     }
 }, {
     tableName: 'imagenes',

@@ -13,7 +13,8 @@ exports.rate = async (req, res) => {
                 {
                     model: Publicacion,
                     as: 'publicacion',
-                    attributes: ['id', 'usuario_id', 'activo']
+                    attributes: ['id', 'usuario_id', 'activo'],
+                    where: { activo: true }
                 }
             ]
         });

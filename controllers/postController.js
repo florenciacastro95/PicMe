@@ -5,24 +5,26 @@ exports.showCreate = (req, res) => {
 
 exports.create = async (req, res) => {
     try {
-        const { titulo, descripcion } = req.body;
+        const { titulo, descripcion, tags, copyright } = req.body;
 
-        const copyright = req.body.copyright === 'on';
         const publicacion = await Publicacion.create({
             usuario_id: req.session.user.id,
             titulo,
             descripcion,
-            copyright
         });
-        console.log(req.files);
+
 
         if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                await Imagen.create({ publicacion_id: publicacion.id, url: `/uploads/${file.filename}` });
+            const copyrightValues = Array.isArray(copyright) ? copyright : [copyright];
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                let copyrightValue = copyrightValues[i] || 'sin_copyright';
+                if (copyright === 'on') copyrightValue = 'copyright';
+                await Imagen.create({ publicacion_id: publicacion.id, url: `/uploads/${file.filename}`, copyright: copyrightValue });
             }
         }
         //-*-*
-        if (req.body.tags) {
+        if (tags) {
             const tags = req.body.tags.split(',').map(t => t.trim()).filter(Boolean);
 
             for (const nombreTag of tags) {
@@ -42,7 +44,6 @@ exports.create = async (req, res) => {
 
 exports.show = async (req, res) => {
     try {
-
         const publicacion = await Publicacion.findByPk(req.params.id, {
             include: [{
                 model: Usuario,
@@ -52,8 +53,8 @@ exports.show = async (req, res) => {
                 model: Imagen,
                 as: 'imagenes',
                 include: [{
-                        model: Rating,
-                        as: 'ratings' 
+                    model: Rating,
+                    as: 'ratings'
                 }]
             },
             {
@@ -70,7 +71,7 @@ exports.show = async (req, res) => {
                     }
                 ]
             }
-        ]
+            ]
         });
 
         if (!publicacion) {
@@ -78,6 +79,13 @@ exports.show = async (req, res) => {
         }
         const publicacionPlana = publicacion.get({ plain: true });
         const userId = req.session.user ? req.session.user.id : null;
+
+        if (!userId && publicacionPlana.imagenes) {
+            publicacionPlana.imagenes = publicacionPlana.imagenes.filter(img => img.copyright === 'sin_copyright');
+            if (publicacionPlana.imagenes.length === 0) {
+                return res.redirect('/');
+            }
+        }
         if (publicacionPlana.imagenes) {
             publicacionPlana.imagenes.forEach(imagen => {
                 const listaRatings = imagen.ratings || [];
@@ -90,7 +98,7 @@ exports.show = async (req, res) => {
             });
         }
         res.render('posts/show', {
-            publicacion:publicacionPlana
+            publicacion: publicacionPlana
         });
 
     } catch (error) {
@@ -135,16 +143,22 @@ exports.update = async (req, res) => {
     if (publicacion.usuario_id !== req.session.user.id) {
         return res.redirect('/');
     }
-
-    const copyright = req.body.copyright === 'on';
-
     await publicacion.update({
         titulo: req.body.titulo,
-        descripcion: req.body.descripcion,
-        copyright: copyright
+        descripcion: req.body.descripcion
     });
-    const { imagenesEliminar } = req.body;
 
+    const { copyright_existente, imagenesEliminar, copyright } = req.body;
+
+    if (copyright_existente) {
+        const copyrightObj = typeof copyright_existente === 'object' ? copyright_existente : {};
+        for (const [imgId, value] of Object.entries(copyrightObj)) {
+            await Imagen.update(
+                { copyright: value },
+                { where: { id: imgId, publicacion_id: publicacion.id } }
+            );
+        }
+    }
     if (imagenesEliminar) {
 
         const ids = Array.isArray(imagenesEliminar)
@@ -160,12 +174,16 @@ exports.update = async (req, res) => {
 
     }
     if (req.files && req.files.length > 0) {
-
-        for (const file of req.files) {
-
+        const newCopyright = req.body.copyright_nuevo || copyright;
+        const copyrightValues = Array.isArray(newCopyright) ? newCopyright : [newCopyright];
+        for (let i = 0; i < req.files.length; i++) {
+            const file = req.files[i];
+            let copyrightValue = copyrightValues[i] || 'sin_copyright';
+            if (newCopyright === 'on') copyrightValue = 'copyright';
             await Imagen.create({
                 publicacion_id: publicacion.id,
-                url: `/uploads/${file.filename}`
+                url: `/uploads/${file.filename}`,
+                copyright: copyrightValue
             });
 
         }
@@ -176,12 +194,12 @@ exports.update = async (req, res) => {
 
 };
 
-exports.changeComments = async(req,res)=>{
+exports.changeComments = async (req, res) => {
 
     const publicacion =
         await Publicacion.findByPk(req.params.id);
 
-    if(publicacion.usuario_id !== req.session.user.id){
+    if (publicacion.usuario_id !== req.session.user.id) {
         return res.redirect('/');
     }
 

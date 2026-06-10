@@ -18,13 +18,14 @@ block content
               span
                 strong ⭐ #{imagen.promedio || '0.0'}
                 small.text-muted.ms-1 (#{imagen.totalVotos || 0} votos)
+
             if user && user.id !== publicacion.usuario_id
-                form.d-flex.align-items-center(action="/rate/imagen/" + imagen.id method="POST")
-                  select.form-select.form-select-sm.me-2(name="puntuacion" required)
-                    option(value="") Nota...
-                    each val in [5, 4, 3, 2, 1]
-                      option(value=val selected=(imagen.miValoracion === val))= val + ' Estrellas'
-                  button.btn.btn-sm.btn-primary(type="submit") Valorar
+              form.d-flex.align-items-center(action="/ratings/imagen/" + imagen.id method="POST")
+                select.form-select.form-select-sm.me-2(name="puntuacion" required)
+                  option(value="") Nota...
+                  each val in [5, 4, 3, 2, 1]
+                    option(value=val selected=(imagen.miValoracion === val))= val + ' Estrellas'
+                button.btn.btn-sm.btn-primary(type="submit") Valorar
   
   p.mt-3= publicacion.descripcion
   if publicacion.tags.length > 0
@@ -78,15 +79,15 @@ block content
       a.btn.btn-warning(href="/posts/" + publicacion.id + "/edit")
         | Editar
 
-    form(action="/posts/" + publicacion.id + "/delete"
-      method="POST")
-      button.btn.btn-danger
-        | Eliminar
-    form(action="/posts/" + publicacion.id + "/habcomments"
-      method="POST")
-      if publicacion.comentarios_habilitados
-        button.btn.btn-secondary
-          | Deshabilitar comentarios
-      else
-        button.btn.btn-success
-          | Habilitar comentarios
+      form(action="/posts/" + publicacion.id + "/delete"
+        method="POST")
+        button.btn.btn-danger
+          | Eliminar
+      form(action="/posts/" + publicacion.id + "/habcomments"
+        method="POST")
+        if publicacion.comentarios_habilitados
+          button.btn.btn-secondary
+            | Deshabilitar comentarios
+        else
+          button.btn.btn-success
+            | Habilitar comentarios

@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const searchController = {
     index: async (req, res) => {
         try {
+            const user = req.session && req.session.user ? req.session.user : null;
             const q = req.query.q ? req.query.q.trim() : '';
             const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
             const limit = 12;
@@ -22,22 +23,39 @@ const searchController = {
                 });
             }
             const searchTerm = q.toLowerCase();
-            const baseIncludes = [
-                {
+
+            const buildImageInclude = () => {
+                const imageInclude = {
                     model: Imagen,
                     as: 'imagenes'
-                },
-                {
-                    model: Usuario,
-                    as: 'usuario',
-                    attributes: ['id', 'username', 'avatar', 'nombre']
-                },
-                {
-                    model: Tag,
-                    as: 'tags',
-                    through: { attributes: [] }
+                };
+
+                if (!user) {
+                    imageInclude.where = { copyright: 'sin_copyright' };
+                    imageInclude.required = true;
                 }
-            ];
+
+                return imageInclude;
+            };
+
+            const baseUserInclude =
+            {
+                model: Usuario,
+                as: 'usuario',
+                attributes: ['id', 'username', 'avatar', 'nombre']
+            };
+
+
+
+
+            //PRUEBA
+            console.log('SEARCH USER?', !!user);
+            console.log('IMAGE INCLUDE SEARCH:', buildImageInclude());
+
+
+
+
+            
             const byContent = await Publicacion.findAll({
                 where: {
                     activo: true,
@@ -46,15 +64,19 @@ const searchController = {
                         { descripcion: { [Op.iLike]: `%${searchTerm}%` } }
                     ]
                 },
-                include: baseIncludes,
+                include: [buildImageInclude(), baseUserInclude, {
+                    model: Tag,
+                    as: 'tags',
+                    through: { attributes: [] }
+                }],
                 order: [['created_at', 'DESC']]
             });
 
             const byTags = await Publicacion.findAll({
                 where: { activo: true },
                 include: [
-                    { model: Imagen, as: 'imagenes' },
-                    { model: Usuario, as: 'usuario', attributes: ['id', 'username', 'avatar', 'nombre'] },
+                    buildImageInclude(),
+                    baseUserInclude,
                     {
                         model: Tag,
                         as: 'tags',
@@ -68,7 +90,7 @@ const searchController = {
             const byUser = await Publicacion.findAll({
                 where: { activo: true },
                 include: [
-                    { model: Imagen, as: 'imagenes' },
+                    buildImageInclude(),
                     {
                         model: Usuario,
                         as: 'usuario',

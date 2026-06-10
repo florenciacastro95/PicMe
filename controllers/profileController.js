@@ -17,12 +17,18 @@ const show = async (req, res) => {
             req.session.alert = { type: 'danger', text: 'Usuario no encontrado.' };
             return res.redirect('/');
         }
+        const wherePublicaciones = {  
+            usuario_id: usuario.id,   
+            activo: true 
+        };                                 
+
+
+        if (!currentUserId) { 
+            wherePublicaciones.copyright = false; 
+        }
         const publicaciones =
             await Publicacion.findAll({
-                where: {
-                    usuario_id: usuario.id,
-                    activo: true
-                },
+                where: wherePublicaciones,
                 include: [
                     { model: Imagen, as: 'imagenes' },
                     { model: Tag, as: 'tags', through: { attributes: [] } }
@@ -31,7 +37,7 @@ const show = async (req, res) => {
             });
         const seguidoresCount = await Seguidor.count({ where: { seguido_id: usuario.id } });
         const seguidosCount = await Seguidor.count({ where: { seguidor_id: usuario.id } });
-        
+
         let isFollowing = false;
         if (currentUserId && currentUserId !== usuario.id) {
             const follow = await Seguidor.findOne({
@@ -40,7 +46,7 @@ const show = async (req, res) => {
                     seguido_id: usuario.id
                 }
             });
-            isFollowing = !!follow; 
+            isFollowing = !!follow;
         }
         const isOwnProfile = currentUserId === usuario.id;
 
@@ -88,12 +94,12 @@ const followers = async (req, res) => {
         );
 
         return res.render('profile/followers', {
-            title: `Seguidores de ${usuario.username}`,
+            title: `Seguidores de ${usuario.username} - PicME!`,
             perfil: usuario,
             seguidores: seguidoresConEstado
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error al ver seguidores:',error);
         return res.redirect('/');
     }
 };
@@ -127,12 +133,12 @@ const following = async (req, res) => {
         );
 
         return res.render('profile/following', {
-            title: `Seguidos por ${usuario.username}`,
+            title: `Seguidos por ${usuario.username} - PicME!`,
             perfil: usuario,
             seguidos: seguidosConEstado
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error al ver seguidos:',error);
         return res.redirect('/');
     }
 };

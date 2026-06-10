@@ -11,12 +11,20 @@ const PublicacionTag = sequelize.define('PublicacionTag', {
 
     publicacion_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'publicaciones',
+            key: 'id'
+        }
     },
 
     tag_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'tags',
+            key: 'id'
+        }
     }
 
 }, {
