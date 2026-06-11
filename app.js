@@ -7,7 +7,13 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const { sequelize } = require('./models');
+
+const miStore = new SequelizeStore({
+    db: sequelize, 
+});
+
 
 //importar rutas
 const homeRoutes = require('./routes/home');
@@ -35,8 +41,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cookieParser());
 // sesiones
+
+app.set('trust proxy', 1);
 app.use(session({
     secret: process.env.SESSION_SECRET ||'picme',
+    store: miStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -80,8 +89,9 @@ const PORT = process.env.PORT || 3000;
 
 //*** */
 sequelize.authenticate()
-    .then(() => {
+    .then(async() => {
         console.log('conectado a Postgres');
+        await miStore.sync()
         //await sequelize.sync({alter:true});
         console.log('tablas liostas')
     })

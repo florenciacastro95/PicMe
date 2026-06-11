@@ -12,7 +12,7 @@ block content
     .row.justify-content-center
         each pub in publicaciones
           .col-md-6.col-lg-4.mb-4
-            .card.h-100.shadow-sm
+            .card.h-100.shadow
               if pub.imagenes && pub.imagenes.length > 0
                 img.card-img-top(
                   src=pub.imagenes[0].url
@@ -20,13 +20,13 @@ block content
                   style="height:220px;object-fit:cover;"
                 )
               .card-body.d-flex.flex-column
-                h5.card-title
+                h5.card-title.mb3
                   a.text-decoration-none(href="/posts/" + pub.id)
                     = pub.titulo
                 if pub.descripcion
-                  p.card-text.flex-grow-1
+                  p.card-text.flex-grow-1.small
                     = pub.descripcion
                 .mt-auto
-                  small.text-muted
+                  small.text-muted.d-block.pt-2
                     | Por 
                     a(href="/profile/" + pub.usuario.username)= pub.usuario.username

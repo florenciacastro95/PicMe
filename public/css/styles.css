@@ -37,12 +37,37 @@ body{
 .card{
     border:none;
     border-radius:12px;
+    overflow:hidden;
+    transition:transform .2s ease;
+}
+
+.card:hover{
+    transform:translateY(-3px);
+}
+
+.card-img-top{
+    border-bottom:1px solid #f1f1f1;
 }
 
 .card-title a{
     color:var(--pink-dark);
+     text-decoration:none;
 }
 
 .card-title a:hover{
     text-decoration:underline !important;
+}
+
+.card-text{
+    color:#555;
+}
+
+.text-muted a{
+    color:var(--pink-main);
+    text-decoration:none;
+    font-weight:500;
+}
+
+.text-muted a:hover{
+    text-decoration:underline;
 }
