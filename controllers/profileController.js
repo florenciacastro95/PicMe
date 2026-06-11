@@ -148,7 +148,7 @@ const following = async (req, res) => {
             })
         );
 
-        return res.render('profile/following', {
+        return res.render('profile/folowing', {
             title: `Seguidos por ${usuario.username} - PicME!`,
             perfil: usuario,
             seguidos: seguidosConEstado,

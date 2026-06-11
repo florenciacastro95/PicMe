@@ -26,6 +26,9 @@ block content
             a.btn.btn-outline-primary(href="/profile/" + perfil.username + "/following")
               | Siguiendo
               span.ms-2.badge.bg-primary= seguidosCount
+            if isOwnProfile
+              a.btn.btn-outline-primary(href="/posts/create")
+                | Nueva publicación
 
           if user && !isOwnProfile
             if isFollowing

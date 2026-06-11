@@ -17,9 +17,15 @@ const isNotAuthenticated = (req, res, next) => {
     next();
 };
 const configVarLocals = (req, res, next) => {
-    res.locals.user = req.session.user || null;
-    res.locals.alert = req.session.alert || null;
+    res.locals.user = 
+        req.session &&
+        req.session.user &&
+        req.session.user.id
+            ? req.session.user
+            : null;
+    const alert = req.session.alert || null;
     delete req.session.alert;
+    res.locals.alert = alert;
     next();
 };
 module.exports = {
