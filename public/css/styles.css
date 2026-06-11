@@ -1,3 +1,35 @@
-body {
-    background-color: #caace8;
+:root{
+    --pink-lightest:#fff0f5;
+    --pink-light:#ffb6c1;
+    --pink-main:#ff69b4;
+    --pink-dark:#ff1493;
+}
+
+body{
+    background-color:var(--pink-lightest);
+    min-height:100vh;
+}
+
+
+.navbar-pink{
+    background-color:var(--pink-main);
+}
+
+.navbar-pink .navbar-brand,
+.navbar-pink .nav-link{
+    color:white !important;
+}
+
+.navbar-pink .nav-link:hover{
+    color:var(--pink-lightest) !important;
+}
+
+
+
+.search-input{
+    border-radius:20px;
+}
+
+.search-button{
+    border-radius:20px;
 }

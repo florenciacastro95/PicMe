@@ -26,6 +26,37 @@ block content
                   each val in [5, 4, 3, 2, 1]
                     option(value=val selected=(imagen.miValoracion === val))= val + ' Estrellas'
                 button.btn.btn-sm.btn-primary(type="submit") Valorar
+            if publicacion.comentarios_habilitados
+              hr
+              h6.text-secondary.small  Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
+                if user
+                  form(action="/comments/imagen/" + imagen.id
+                    method="POST")
+                    .mb-3
+                      textarea.form-control(name="contenido"
+                        required
+                        maxlength="1000")
+                    button.btn.btn-primary
+                        | Comentar
+                else
+                  p Iniciá sesión para comentar
+
+                if imagen.comentarios && imagen.comentarios.length > 0
+                    each comentario in imagen.comentarios
+                      .card.mb-2
+                        .card-body
+                          strong= comentario.usuario.username
+                          p.mt-2= comentario.contenido
+                          if user && user.id === comentario.usuario_id
+                            form(action="/comments/" + comentario.id + "/delete"
+                              method="POST")
+                              button.btn.btn-sm.btn-danger
+                                | Eliminar
+                else
+                p.text-muted.small.text-center No hay comentarios aún.
+            else
+                .alert.alert-light.p-1.text-center.small.mb-0
+                span.text-muted Comentarios cerrados
   
   p.mt-3= publicacion.descripcion
   if publicacion.tags.length > 0
@@ -36,42 +67,10 @@ block content
           href="/search?q=" + tag.nombre
         )
           | ##{tag.nombre}
-  p
-    strong Autor:
-      a.ms-1(href="/profile/" + publicacion.usuario.username)=publicacion.usuario.username
-  hr
-  h4 Comentarios
-  if publicacion.comentarios_habilitados
-    if user
-      form(action="/comments/" + publicacion.id
-        method="POST")
-        .mb-3
-          textarea.form-control(name="contenido"
-            required
-            maxlength="1000")
-        button.btn.btn-primary
-          | Comentar
-    else
-      p Iniciá sesión para comentar
-
-    if publicacion.comentarios && publicacion.comentarios.length > 0
-      each comentario in publicacion.comentarios
-        .card.mb-2
-          .card-body
-            strong= comentario.usuario.username
-            p.mt-2= comentario.contenido
-            if user && user.id === comentario.usuario_id
-              form(action="/comments/" + comentario.id + "/delete"
-                method="POST")
-                button.btn.btn-sm.btn-danger
-                  | Eliminar
-    else
-      p.text-muted Todavía no hay comentarios.
-  else
-    .alert.alert-secondary.mt-3
-      strong Comentarios cerrados.
-      br
-      | El autor deshabilitó los comentarios para esta publicación.
+    p
+      strong Autor:
+        a.ms-1(href="/profile/" + publicacion.usuario.username)=publicacion.usuario.username
+    hr
 
   if user && user.id === publicacion.usuario_id
     hr

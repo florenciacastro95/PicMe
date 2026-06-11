@@ -28,14 +28,15 @@ Publicacion.belongsTo(Usuario, {
     as: 'usuario'
 });
 
-Publicacion.hasMany(Comentario,{
-    foreignKey:'publicacion_id',
-    as:'comentarios'
+Imagen.hasMany(Comentario,{
+    foreignKey: 'imagen_id',
+    as:'comentarios',
+    onDelete: 'CASCADE'
 });
 
-Comentario.belongsTo(Publicacion,{
-    foreignKey:'publicacion_id',
-    as:'publicacion'
+Comentario.belongsTo(Imagen,{
+    foreignKey:'imagen_id',
+    as:'imagen'
 });
 
 Usuario.hasMany(Comentario,{
