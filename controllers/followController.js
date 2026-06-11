@@ -10,19 +10,19 @@ const follow = async (req, res) => {
                 type: 'warning',
                 text: 'No puedes seguirte a ti mismo.'
             };
-            return res.redirect('back');
+            return req.session.save(() => res.redirect('back'));
         }
 
         const targetUser = await Usuario.findOne({
             where: { id: targetUserId, activo: true }
         });
-        
+
         if (!targetUser) {
             req.session.alert = {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
             };
-            return res.redirect('/');
+            return req.session.save(() => res.redirect('back'));
         }
 
         const existingFollow = await Seguidor.findOne({
@@ -31,7 +31,7 @@ const follow = async (req, res) => {
                 seguido_id: targetUserId
             }
         });
-        
+
         if (existingFollow) {
             req.session.alert = {
                 type: 'info',
@@ -44,21 +44,24 @@ const follow = async (req, res) => {
             seguidor_id: currentUserId,
             seguido_id: targetUserId
         });
-        
+
         req.session.alert = {
             type: 'success',
             text: 'Ahora sigues a ' + targetUser.username + '.'
         };
-        
-        return res.redirect('/profile/' + targetUser.username);
-        
+
+        return req.session.save((err) => {
+            if (err) console.error('Error al guardar sesión en follow:', err);
+            return res.redirect('/profile/' + targetUser.username);
+        });
+
     } catch (error) {
         console.error('Error al seguir:', error);
         req.session.alert = {
             type: 'danger',
             text: 'Error al seguir al usuario.'
         };
-        return res.redirect('back');
+        return req.session.save(() => res.redirect('back'));
     }
 };
 
@@ -71,13 +74,13 @@ const unfollow = async (req, res) => {
         const targetUser = await Usuario.findOne({
             where: { id: targetUserId, activo: true }
         });
-        
+
         if (!targetUser) {
             req.session.alert = {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
             };
-            return res.redirect('/');
+            return req.session.save(() => res.redirect('/'));
         }
 
         const deleted = await Seguidor.destroy({
@@ -86,7 +89,7 @@ const unfollow = async (req, res) => {
                 seguido_id: targetUserId
             }
         });
-        
+
         if (deleted) {
             req.session.alert = {
                 type: 'success',
@@ -98,16 +101,19 @@ const unfollow = async (req, res) => {
                 text: 'No seguias a este usuario.'
             };
         }
-        
-        return res.redirect('/profile/' + targetUser.username);
-        
+
+        return req.session.save((err) => {
+            if (err) console.error('Error al guardar sesión en unfollow:', err);
+            return res.redirect('/profile/' + targetUser.username);
+        });
+
     } catch (error) {
         console.error('Error al dejar de seguir:', error);
         req.session.alert = {
             type: 'danger',
             text: 'Error al dejar de seguir al usuario.'
         };
-        return res.redirect('back');
+        return req.session.save(() => res.redirect('back'));
     }
 };
 

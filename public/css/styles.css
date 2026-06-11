@@ -3,15 +3,26 @@
     --pink-light:#ffb6c1;
     --pink-main:#ff69b4;
     --pink-dark:#ff1493;
+    --pink-verydark:#841550;
 }
 
 body{
+     font-family:'Poppins',sans-serif;
     background-color:var(--pink-lightest);
     min-height:100vh;
 }
-
+.title{
+    font-size: 3rem;
+    color:var(--pink-verydark);
+}
+h2{
+    color:var(--pink-dark);
+}
 .search-input{
     border-radius:20px;
+}
+.search-input::placeholder {
+  font-size: 0.85rem !important; 
 }
 
 
@@ -185,4 +196,19 @@ body{
 .post-tag:hover{
     background-color:var(--pink-dark);
     color:white;
+}
+
+/*footer*/
+.footer-pink{
+    background:white;
+    border-top:1px solid #f3d6e3;
+    margin-top:auto;
+}
+
+.footer-pink p:first-child{
+    color:var(--pink-dark);
+}
+
+.footer-pink .small{
+    color:#777;
 }

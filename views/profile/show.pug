@@ -6,13 +6,13 @@ block metadata
 block content
   .row.justify-content-center
     .col-lg-10
-      .card.mb-4
+      .card.mb-4.shadow-sm
         .card-body.text-center
           if perfil.avatar
             img.rounded-circle.mb-3(src=perfil.avatar alt=perfil.username width="96" height="96")
           else
             .rounded-circle.bg-secondary.mx-auto.mb-3(style="width: 96px; height: 96px;")
-          h2.mb-1= perfil.username
+          h2.mb-1.fw-bold= perfil.username
 
           if perfil.nombre
             p.text-muted.mb-2= perfil.nombre
@@ -21,49 +21,56 @@ block content
             p.mb-3= perfil.bio
           .d-flex.justify-content-center.gap-3.flex-wrap.mb-3
             a.btn.btn-outline-primary(href="/profile/" + perfil.username + "/followers")
+              i.bi.bi-people-fill.me-1
               | Seguidores
               span.ms-2.badge.bg-primary= seguidoresCount
             a.btn.btn-outline-primary(href="/profile/" + perfil.username + "/following")
+              i.bi.bi-person-heart.me-1
               | Siguiendo
               span.ms-2.badge.bg-primary= seguidosCount
             if isOwnProfile
-              a.btn.btn-outline-primary(href="/posts/create")
+              a.btn.btn-pink(href="/posts/create")
+                i.bi.bi-plus-circle.me-1
                 | Nueva publicación
 
           if user && !isOwnProfile
             if isFollowing
               form(action="/follow/" + perfil.id + "/unfollow" method="POST")
-                button.btn.btn-warning(type="submit") Dejar de seguir
+                button.btn.btn-warning(type="submit") 
+                  i.bi.bi-person-check-fill.me-1
+                  | Siguiendo
             else
               form(action="/follow/" + perfil.id method="POST")
-                button.btn.btn-primary(type="submit") Seguir
-  h4.mb-3 Publicaciones
-    if publicaciones && publicaciones.length > 0
-      .row.justify-content-center
-        each pub in publicaciones
-          .col-md-6.col-lg-4.mb-4
-            .card.h-100
-              if pub.imagenes &&pub.imagenes.length > 0
-                img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
-              else
-                .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
-                | Sin imagen
-              .card-body
-                h5.card-title
-                  a.text-decoration-none(
-                        href="/posts/" + pub.id
-                  )= pub.titulo
-                .card-body
+                button.btn.btn-pink(type="submit") 
+                  i.bi.bi-person-plus-fill.me-1
+                  | Seguir
+  h4.mb-3.fw-bold
+    i.bi.bi-images.me-2
+    | Publicaciones
+  if publicaciones && publicaciones.length > 0
+    .row.justify-content-center
+      each pub in publicaciones
+        .col-md-6.col-lg-4.mb-4
+          .card.h-100.shadow
+            if pub.imagenes &&pub.imagenes.length > 0
+              img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
+            else
+              .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
+              | Sin imagen
+            .card-body.d-flex.flex-column
               h5.card-title
-                p.card-text.flex-grow-1  
-                  = pub.descripcion
-              
+                a.text-decoration-none(
+                      href="/posts/" + pub.id
+                )= pub.titulo
+              if pub.descripcion
+                p.card-text.flex-grow-1.small= pub.descripcion
               if pub.tags && pub.tags.length > 0
-                p.mb-2
+                .my-2
                   each tag in pub.tags.slice(0, 3)
                     a.badge.bg-secondary.me-1.text-decoration-none(href="/search?q=" + tag.nombre)= '#' + tag.nombre
-              
-              p.text-muted.small.mb-0
-                | #{new Date(pub.created_at).toLocaleDateString('es-ES')}
-    else
-      .alert.alert-secondary No hay publicaciones.
+              .mt-auto.pt-2
+                p.text-muted.small.mb-0
+                i.bi.bi-calendar3.me-1
+                  | #{new Date(pub.created_at).toLocaleDateString('es-ES')}
+  else
+    .alert.alert-secondary No hay publicaciones.
