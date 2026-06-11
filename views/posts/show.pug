@@ -3,17 +3,18 @@ extends ../layouts/layout
 block content
   .mb-3
     a.btn.btn-outline-secondary(href="#" onclick="window.history.back(); return false;") ⬅ Volver atrás
-  h2= publicacion.titulo
+  h2.mb-3.fw-bold= publicacion.titulo
   
   if publicacion.imagenes.length > 0
-    .row
+    .row.g-4
       each imagen in publicacion.imagenes
-        .col-md-4.mb-3
-          .card
-            img.img-fluid.rounded(
+        .col-md-6.col-lg-4
+          .card.publicacion-card.shadow-sm
+            img.card-img-top.publicacion-img(
               src=imagen.url
+              alt=publicacion.titulo
             )
-          .card-body.p-2
+          .card-body.p-3
             .d-flex.justify-content-between.align-items-center.mb-2
               span
                 strong ⭐ #{imagen.promedio || '0.0'}
@@ -36,16 +37,16 @@ block content
                       textarea.form-control(name="contenido"
                         required
                         maxlength="1000")
-                    button.btn.btn-primary
+                    button.btn.btn-pink
                         | Comentar
                 else
                   p Iniciá sesión para comentar
 
                 if imagen.comentarios && imagen.comentarios.length > 0
                     each comentario in imagen.comentarios
-                      .card.mb-2
-                        .card-body
-                          strong= comentario.usuario.username
+                      .card.mb-2.shadow-sm.border-0
+                        .card-body.py-2
+                          strong.text-primary= comentario.usuario.username
                           p.mt-2= comentario.contenido
                           if user && user.id === comentario.usuario_id
                             form(action="/comments/" + comentario.id + "/delete"
@@ -58,24 +59,24 @@ block content
                 .alert.alert-light.p-1.text-center.small.mb-0
                 span.text-muted Comentarios cerrados
   
-  p.mt-3= publicacion.descripcion
+  p.mt-4.fs-5= publicacion.descripcion
   if publicacion.tags.length > 0
     p
       strong Tags:
       each tag in publicacion.tags
-        a.badge.bg-secondary.me-1(
+        a.post-tag(
           href="/search?q=" + tag.nombre
         )
           | ##{tag.nombre}
-    p
-      strong Autor:
-        a.ms-1(href="/profile/" + publicacion.usuario.username)=publicacion.usuario.username
-    hr
+      hr.my-3
+      p
+        strong Autor:
+          a.ms-1(
+            href="/profile/" + publicacion.usuario.username
+          )=publicacion.usuario.username
 
-  if user && user.id === publicacion.usuario_id
-    hr
-    .d-flex.gap-2.mt-3
-      a.btn.btn-warning(href="/posts/" + publicacion.id + "/edit")
+    .d-flex.gap-2.mt-3.post-actions
+      a.btn.btn-edit(href="/posts/" + publicacion.id + "/edit")
         | Editar
 
       form(action="/posts/" + publicacion.id + "/delete"
@@ -85,7 +86,7 @@ block content
       form(action="/posts/" + publicacion.id + "/habcomments"
         method="POST")
         if publicacion.comentarios_habilitados
-          button.btn.btn-secondary
+          button.btn.btn-comments
             | Deshabilitar comentarios
         else
           button.btn.btn-success

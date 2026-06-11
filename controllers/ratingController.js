@@ -3,6 +3,7 @@ const { Rating, Imagen, Publicacion } = require('../models');
 exports.rate = async (req, res) => {
     let urlPublicacion = '/';
     try {
+        
         const { imagenId }= req.params; 
         const usuarioId = req.session.user.id;
         const puntuacion = parseInt(req.body.puntuacion, 10);
@@ -31,7 +32,7 @@ exports.rate = async (req, res) => {
                 text: 'Imagen no encontrada.'
             };return res.redirect('/');
         }
-        const urlPublicacion = '/posts/' + imagen.publicacion_id;
+        urlPublicacion = '/posts/' + imagen.publicacion_id;
 
       
         if (isNaN(puntuacion) || puntuacion < 1 || puntuacion > 5) {
@@ -41,7 +42,7 @@ exports.rate = async (req, res) => {
             };
             return res.redirect(urlPublicacion);
         }
-        if (imagen.publicacion.usuario_id === userId) {
+        if (imagen.publicacion.usuario_id === usuarioId) {
             req.session.alert = {
                 type: 'warning',
                 text: 'No puedes valorar tus propias imagenes.'
@@ -76,7 +77,7 @@ exports.rate = async (req, res) => {
         }
 
     
-        return res.redirect(urlPublicacion);
+        return req.session.save(() =>res.redirect(urlPublicacion));
 
     } catch (error) {
         console.error('Error al valorar:', error);
