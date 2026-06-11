@@ -66,8 +66,9 @@ exports.login = async (req, res) => {
             type: 'success',
             text: `Bienvenido/a, ${user.username}.`
         };
-
+        req.session.save(() => {
         return res.redirect('/');
+        });
     } catch (error) {
         console.error('error en login authController', error);
 
@@ -154,8 +155,9 @@ exports.register = async (req, res) => {
             type: 'success',
             text: 'Usuario registrado correctamente. Ahora podés iniciar sesión.'
         };
-
+        req.session.save(() => {
         return res.redirect('/auth/login');
+        });
 
     } catch (error) {
         console.log("error al registrar usuario en authController:register" + error);

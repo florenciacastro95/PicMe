@@ -37,13 +37,15 @@ exports.create = async (req, res) => {
                 descripcion: descripcion ? descripcion.trim() : null,
                 comentarios_habilitados: true
             });
-
-            const copyrightValues = Array.isArray(copyright) ? copyright : [copyright];
+            let valorCopyright = 'sin_copyright';
+            if (copyright === 'on' || copyright === true || copyright === 'copyright') {
+                valorCopyright = 'copyright';
+            }
+            
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
-                const copyrightValue = copyrightValues[i] || 'sin_copyright';
                 await Imagen.create({
-                    publicacion_id: publicacion.id, url: file.path, copyright: copyrightValue, orden: i
+                    publicacion_id: publicacion.id, url: file.path, copyright: valorCopyright, orden: i
                 });
             }
 
