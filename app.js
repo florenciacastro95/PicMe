@@ -24,9 +24,6 @@ const { configVarLocals } = require('./middlewares/auth');
 
 //app
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cookieParser());
 
 
 // config de pug
@@ -34,9 +31,9 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // archivos estaticos
-
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(cookieParser());
 // sesiones
 app.use(session({
     secret: process.env.SESSION_SECRET ||'picme',
@@ -48,7 +45,8 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 
     }
 }));
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //middleare para pasarusuario
 app.use(configVarLocals);
@@ -71,6 +69,7 @@ app.use((req, res) => {
     });
 });
 app.use((err, req, res, next) => {
+    console.error("ERROR INTERNO DEL SERVIDOR (MIDDLEWARE GLOBAL):", err);
     res.status(500).render('errors/500', {
         title: 'Error del servidor - PICME'
     });

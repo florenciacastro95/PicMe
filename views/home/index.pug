@@ -3,19 +3,30 @@ extends ../layouts/layout
 block metadata
   title Inicio - PicME!
 block content
-  .text-center
-    h1 PicME!
-    if user
-      a.btn.btn-success.mb-4(href="/posts/create")
-        | Nueva publicación
-
-    each pub in publicaciones
-      .card.mb-3.text-start.mx-auto(style="max-width: 600px;")
-        .card-body
-          h4
-            a(href="/posts/" + pub.id)
-              = pub.titulo
-          p= pub.descripcion
-          small.text-muted
-            | Por 
-            a(href="/profile/" + pub.usuario.username)= pub.usuario.username
+  .container
+    .text-center.mb-4
+      h1 PicME!
+      if user
+        a.btn.btn-success.mb-4(href="/posts/create")
+          | Nueva publicación
+    .row.justify-content-center
+        each pub in publicaciones
+          .col-md-6.col-lg-4.mb-4
+            .card.h-100.shadow-sm
+              if pub.imagenes && pub.imagenes.length > 0
+                img.card-img-top(
+                  src=pub.imagenes[0].url
+                  alt=pub.titulo
+                  style="height:220px;object-fit:cover;"
+                )
+              .card-body.d-flex.flex-column
+                h5.card-title
+                  a.text-decoration-none(href="/posts/" + pub.id)
+                    = pub.titulo
+                if pub.descripcion
+                  p.card-text.flex-grow-1
+                    = pub.descripcion
+                .mt-auto
+                  small.text-muted
+                    | Por 
+                    a(href="/profile/" + pub.usuario.username)= pub.usuario.username

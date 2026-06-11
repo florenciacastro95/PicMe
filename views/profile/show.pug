@@ -36,7 +36,7 @@ block content
                 button.btn.btn-primary(type="submit") Seguir
   h4.mb-3 Publicaciones
     if publicaciones && publicaciones.length > 0
-      .row
+      .row.justify-content-center
         each pub in publicaciones
           .col-md-6.col-lg-4.mb-4
             .card.h-100
@@ -47,12 +47,13 @@ block content
                 | Sin imagen
               .card-body
                 h5.card-title
-                  a(
+                  a.text-decoration-none(
                         href="/posts/" + pub.id
                   )= pub.titulo
                 .card-body
               h5.card-title
-                a(href="/posts/" + pub.id)= pub.titulo
+                p.card-text.flex-grow-1  
+                  = pub.descripcion
               
               if pub.tags && pub.tags.length > 0
                 p.mb-2

@@ -1,27 +1,23 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const uploadDire = path.join(__dirname, '../public/uploads');
 
-if (!fs.existsSync(uploadDire)) {
-    fs.mkdirSync(uploadDire, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, uploadDire);
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET 
+});
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'uploads', 
+        allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
+        public_id: (req, file) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            return 'img-' + uniqueSuffix;
+        },
     },
-    filename(req, file, cb) {
-        const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1E9);
-
-        const ext = path
-            .extname(file.originalname)
-            .toLowerCase();
-
-        cb(null, 'img-' + uniqueSuffix + ext);
-    }
 });
 
 const fileFiltro = (req, file, cb) => {
@@ -47,8 +43,8 @@ const fileFiltro = (req, file, cb) => {
 };
 
 const upload = multer({
-    storage,
-    fileFiltro,
+    storage: storage,
+    fileFiltro: fileFiltro,
     limits: {
         fileSize: 5 * 1024 * 1024
     }

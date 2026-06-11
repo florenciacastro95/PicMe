@@ -10,14 +10,13 @@ router.get('/create',
 
 router.post('/create',
     isAuthenticated,
-    upload.array('imagenes', 10),
     postController.create);
 
 router.get('/:id',
     postController.show);
 
 router.get('/:id/edit',
-    isAuthenticated,
+    isAuthenticated, upload.array('imagenes', 10),
     postController.showEdit);
 
 router.post('/:id/edit',

@@ -33,3 +33,16 @@ body{
 .search-button{
     border-radius:20px;
 }
+
+.card{
+    border:none;
+    border-radius:12px;
+}
+
+.card-title a{
+    color:var(--pink-dark);
+}
+
+.card-title a:hover{
+    text-decoration:underline !important;
+}
