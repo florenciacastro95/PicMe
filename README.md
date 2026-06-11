@@ -28,11 +28,21 @@ npm install
 ```
 3. **Configurar variables de entorno:**
 Duplica el archivo .env.example, renombralo como .env e ingresa las credenciales correspondientes para tu base de datos y llaves de entorno:
-PORT=3000
-DATABASE_URL=postgres://usuario:password@host/database
-SESSION_SECRET=tu_clave_secreta_aqui
-CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 
+PORT=3000
+NODE_ENV=development
+
+DB_HOST=ep-autumn-shape-...sa-east-1.aws.neon.tech
+DB_PORT=5432
+DB_NAME=neondb
+DB_USER=neondb_owner
+DB_PASSWORD=tu_contraseña_aqui
+
+SESSION_SECRET=picme
+
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
 4. **Inicializar la base de datos:**
 Ejecuta el script de inicialización para construir las tablas, relaciones e integridad referencial necesarias en la base de datos:
 ```bash
