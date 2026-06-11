@@ -43,31 +43,31 @@ block content
             if publicacion.comentarios_habilitados
               hr
               h6.text-secondary.small  Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
-                if user
-                  form(action="/comments/imagen/" + imagen.id
-                    method="POST")
-                    .mb-3
-                      textarea.form-control(name="contenido"
-                        required
-                        maxlength="1000")
-                    button.btn.btn-pink
-                        | Comentar
-                else
-                  p Iniciá sesión para comentar
+              if user
+                form(action="/comments/" + imagen.id
+                  method="POST")
+                  .mb-3
+                    textarea.form-control(name="contenido"
+                      required
+                      maxlength="1000")
+                  button.btn.btn-pink
+                      | Comentar
+              else
+                p Iniciá sesión para comentar
 
-                if imagen.comentarios && imagen.comentarios.length > 0
-                    each comentario in imagen.comentarios
-                      .card.mb-2.shadow-sm.border-0
-                        .card-body.py-2
-                          strong.text-primary= comentario.usuario.username
-                          p.mt-2= comentario.contenido
-                          if user && user.id === comentario.usuario_id
-                            form(action="/comments/" + comentario.id + "/delete"
-                              method="POST")
-                              button.btn.btn-sm.btn-danger
-                                | Eliminar
-                else
-                p.text-muted.small.text-center No hay comentarios aún.
+              if imagen.comentarios && imagen.comentarios.length > 0
+                each comentario in imagen.comentarios
+                  .card.mb-2.shadow-sm.border-0
+                    .card-body.py-2
+                      strong.text-primary= comentario.usuario.username
+                      p.mt-2= comentario.contenido
+                      if user && user.id === comentario.usuario_id
+                        form(action="/comments/" + comentario.id + "/delete"
+                          method="POST")
+                          button.btn.btn-sm.btn-danger
+                            | Eliminar
+              else
+                  p.text-muted.small.text-center No hay comentarios aún.
             else
                 .alert.alert-light.p-1.text-center.small.mb-0
                 span.text-muted Comentarios cerrados

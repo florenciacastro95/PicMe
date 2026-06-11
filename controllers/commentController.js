@@ -1,4 +1,4 @@
-const { Comentario, Publicacion } = require('../models');
+const { Comentario, Publicacion, Imagen } = require('../models');
 
 const commentController = {
     create: async (req, res) => {
@@ -7,7 +7,12 @@ const commentController = {
                 return res.redirect(req.get('Referrer') || '/');
             }
 
-            const publicacion =await Publicacion.findByPk(req.params.id);
+            const imagen = await Imagen.findByPk(req.params.id);
+
+            if (!imagen) {
+                return res.status(404).render('errors/404');
+            }
+            const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
             if (!publicacion) {
                 return res.status(404).render('errors/404');
             }
@@ -16,7 +21,7 @@ const commentController = {
             }
 
             await Comentario.create({
-                publicacion_id: req.params.id,
+                 imagen_id: imagen.id,
                 usuario_id: req.session.user.id,
                 contenido: req.body.contenido
             });

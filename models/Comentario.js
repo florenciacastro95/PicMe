@@ -8,7 +8,7 @@ const Comentario = sequelize.define('Comentario', {
         autoIncrement: true
     },
 
-    publicacion_id: {
+    imagen_id: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
