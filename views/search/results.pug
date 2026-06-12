@@ -75,43 +75,73 @@ block content
                 h6.card-title.text-truncate.mb-1
                   a.text-decoration-none.text-dark.fw-bold(href="/profile/" + u.username)= u.username
                 p.text-muted.small.text-truncate.mb-0= u.nombre
-  if publicaciones && publicaciones.length > 0
-    .row
-      each pub in publicaciones
-        .col-md-6.col-lg-4.mb-4
-          .card.h-100
-            if pub.imagenes && pub.imagenes.length > 0
-              img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
-            else
-              .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
-                | Sin imagen
-            .card-body
-              h5.card-title
-                a(href="/posts/" + pub.id)= pub.titulo
-              if pub.descripcion
-                p.card-text= pub.descripcion
-              if pub.tags && pub.tags.length > 0
-                p.mb-2
-                  each tag in pub.tags.slice(0, 3)
-                    a.badge.bg-secondary.me-1.text-decoration-none(href="/search?q=" + tag.nombre)= '#' + tag.nombre
-              p.text-muted.small.mb-0
-                | Por
-                a.ms-1(href="/profile/" + pub.usuario.username)= pub.usuario.username
+    if publicaciones && publicaciones.length > 0
+      h4.fw-bold.mb-3.text-secondary
+        i.bi.bi-images.me-2
+        | Galería de publicaciones encontrados
+      
+      if query || tagFilter
+        p.text-muted.small.mb-4
+          | Parámetros activos: 
+          if query
+            span.badge.bg-dark.me-1 Texto: #{query}
+          if tagFilter
+            span.badge.bg-secondary.me-1 Tag: ##{tagFilter}
+          span.badge.bg-dark.ms-2 #{totalResults} publi encontrada/s
 
-    if totalPages > 1
-      nav.mt-4
-        ul.pagination.justify-content-center
-          if hasPrevPage
-            li.page-item
-              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage - 1}`) Anterior
+      .row
+        each pub in publicaciones
+          .col-md-6.col-lg-4.mb-4
+            .card.h-100.shadow-sm
+              if pub.imagenes && pub.imagenes.length > 0
+                img.card-img-top(src=pub.imagenes[0].url alt=pub.titulo style="height: 220px; object-fit: cover;")
+              else
+                .bg-secondary.text-white.d-flex.align-items-center.justify-content-center(style="height: 220px;")
+                  i.bi.bi-image.me-2
+                  | Sin imagen
+              .card-body.d-flex.flex-column
+                h5.card-title.fw-semibold
+                  a.text-decoration-none(href="/posts/" + pub.id)= pub.titulo
+                if pub.descripcion
+                  p.card-text.small.text-muted.flex-grow-1= pub.descripcion
+                
+                .mt-auto.pt-2
+                  if pub.tags && pub.tags.length > 0
+                    .mb-2
+                      each tag in pub.tags.slice(0, 3)
+                        a.badge.bg-light.text-secondary.border.me-1.text-decoration-none(href="/search?filterType=publicaciones&tag=" + tag.nombre)
+                          | ##{tag.nombre}
+                  
+                  .d-flex.justify-content-between.align-items-center.small.text-muted.pt-1
+                    span
+                      | Por 
+                      a.fw-medium(href="/profile/" + pub.usuario.username)= pub.usuario.username
+                    
+                    if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes[0] && pub.imagenes[0].copyright === 'copyright')
+                      span.text-warning.fw-semibold
+                        i.bi.bi-c-circle.me-1
+                        | Copyright
+                    else
+                      span.text-success.fw-semibold
+                        i.bi.bi-globe.me-1
+                        | Libre
 
-          - for (let i = 1; i <= totalPages; i++)
-            li.page-item(class=i === currentPage ? 'active' : '')
-              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${i}`)= i
+      if totalPages > 1
+        nav.mt-4
+          ul.pagination.justify-content-center
+            if hasPrevPage
+              li.page-item
+                a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage - 1}`) Anterior
 
-          if hasNextPage
-            li.page-item
-              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage + 1}`) Siguiente
-  else
-    .alert.alert-info
-      | No se encontraron resultados o la búsqueda está vacía.
+            - for (let i = 1; i <= totalPages; i++)
+              li.page-item(class=i === currentPage ? 'active' : '')
+                a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${i}`)= i
+
+            if hasNextPage
+              li.page-item
+                a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage + 1}`) Siguiente
+    else
+      if filterType !== 'usuarios'
+        .alert.alert-info.shadow-sm.mt-3
+          i.bi.bi-info-circle-fill.me-2
+          | No se encontraron publicaciones con los criterios seleccionados. Intentá removiendo filtros.

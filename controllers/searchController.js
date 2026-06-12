@@ -80,7 +80,7 @@ const searchController = {
                     includeFiltro.push(imageIncludeFiltro);
                 }
 
-                
+
                 const publicacionesFiltradas = await Publicacion.findAll({
                     where: wherePublicacion,
                     include: includeFiltro,
@@ -119,7 +119,9 @@ const searchController = {
                 }
                 publicacionesEncontradas = rows.map(pubInstance => {
                     const pub = pubInstance.get({ plain: true });
-                    pub.copyright = (pub.imagenes && pub.imagenes.length > 0) ? pub.imagenes[0].copyright : null;
+                    const primeraImagen = (pubInstance.imagenes && pubInstance.imagenes.length > 0) ? pubInstance.imagenes[0] : null;
+
+                    pub.copyright= primeraImagen ? primeraImagen.copyright : 'sin_copyright';
                     return pub;
                 });
             }

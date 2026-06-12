@@ -38,7 +38,7 @@ block content
                         = pub.promedioValoracion
                       else
                         | Sin votos
-                    if pub.copyright === 'copyright'
+                    if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes[0] && pub.imagenes[0].copyright === 'copyright')
                       span.text-warning
                         i.bi.bi-c-circle.me-1
                         | Copyright
