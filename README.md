@@ -47,8 +47,13 @@ Cuentas de prueba dadas de alta en el sistema para validar los diferentes flujos
 | Florencia Magalí | fmcastro | flor@ulp.com | 123 |
 | Lula Dasilva | Lula | lula@ulp.com | 123 |
 | Lali Espósito | Lali | lali@gmail.com | 123 |
+| Allison Swift | TaylorS | swift@ulp.com | 123 |
+| Juan | Juan Lopez | juan@ulp.com | 123 |
+| adan | alan | ada@ulp.com | 123 |
+| Lara Croft | LaraCroft | lara@ulp.com | 123 |
+| Oriana Junco | EsUnLook | orijunco@ulp.com | ori123 |
 
-Nota: Los perfiles se inicializan con valores avatar: null y bio: null correspondientes al alcance actual de regularización.
+Nota: Los perfiles se inicializan con valores avatar: null y bio: null correspondientes al alcance actual de regularización. Las contraseñas ded los primeros 7 usuarios se hicieron sin validación.
 
 ---
 
