@@ -15,11 +15,10 @@ Proyecto de regularizacion para la materia Programacion Web 2-
 - **Autenticacion:** express-session + bcrypt
 
 ## Instalacion y despliegue en Entorno Local
-Para ejecutar este proyecto de forma local, hay que seguir los siguientes pasos:
+Para ejecutar este proyecto de forma local, hay que constar con una cuenta en Cloudinary donde puedas usar tus credenciales y una cuenta en Neon (o en su defecto tener instalado PostgreSQL) y seguir los siguientes pasos:
 1. **Clonar el repositorio:**
 ```bash
-   git clone https://github.com/florenciacastro95/PicMe
-   cd PicMe
+   git clone https://github.com/florenciacastro95/PicMe.git
 ```
 
 2. **Instalar dependencias de Node.js:**
@@ -27,27 +26,13 @@ Para ejecutar este proyecto de forma local, hay que seguir los siguientes pasos:
 npm install
 ```
 3. **Configurar variables de entorno:**
-Duplica el archivo .env.example, renombralo como .env e ingresa las credenciales correspondientes para tu base de datos y llaves de entorno:
-
-PORT=3000
-NODE_ENV=development
-
-DB_HOST=ep-autumn-shape-...sa-east-1.aws.neon.tech
-DB_PORT=5432
-DB_NAME=neondb
-DB_USER=neondb_owner
-DB_PASSWORD=tu_contraseña_aqui
-
-SESSION_SECRET=picme
-
-CLOUDINARY_CLOUD_NAME=tu_cloud_name
-CLOUDINARY_API_KEY=tu_api_key
-CLOUDINARY_API_SECRET=tu_api_secret
+Duplica el archivo .env.example, renombralo como .env e ingresa tus credenciales para tu base de datos y llaves de entorno
 4. **Inicializar la base de datos:**
-Ejecuta el script de inicialización para construir las tablas, relaciones e integridad referencial necesarias en la base de datos:
+Ejecuta el script de inicialización para construir las tablas, relaciones e integridad referencial necesarias en la base de datos, para ello necesitas una cuenta en Neon. 
 ```bash
 npm run db:init
 ```
+Si deseas crear la base localmente deberás tener instalado postgres y ejecutar "node sql/creardb.js"
 5. **Iniciar el servidor:**
 ```bash
 npm start
