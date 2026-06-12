@@ -58,7 +58,23 @@ block content
               button.btn.btn-pink.px-4.w-100.w-md-auto(type="submit")
                 i.bi.bi-funnel-fill.me-2
                 | Aplicar filtros
-
+    if usuarios && usuarios.length > 0
+      .mb-5
+        h4.fw-bold.mb-3.text-secondary
+          i.bi.bi-people-fill.me-2
+          | Usuarios que coinciden
+        .row.row-cols-2.row-cols-sm-3.row-cols-md-6.g-3
+          each u in usuarios
+            .col
+              .card.text-center.h-100.p-3.border-0.shadow-sm.bg-white
+                if u.avatar
+                  img.rounded-circle.mx-auto.mb-2(src=u.avatar alt=u.username style="width: 65px; height: 65px; object-fit: cover;")
+                else
+                  .rounded-circle.bg-pink-light.text-pink.d-flex.align-items-center.justify-content-center.mx-auto.mb-2(style="width: 65px; height: 65px; font-size: 1.5rem;")
+                    | #{u.username.charAt(0).toUpperCase()}
+                h6.card-title.text-truncate.mb-1
+                  a.text-decoration-none.text-dark.fw-bold(href="/profile/" + u.username)= u.username
+                p.text-muted.small.text-truncate.mb-0= u.nombre
   if publicaciones && publicaciones.length > 0
     .row
       each pub in publicaciones
