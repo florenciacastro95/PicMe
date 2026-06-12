@@ -2,12 +2,7 @@ extends ../layouts/layout
 
 block content
   .mb-3
-    a.btn.btn-outline-secondary(
-      href="#"
-      onclick="goBack('/'); return false;"
-    )
-      i.bi.bi-arrow-left.me-1
-      | Volver
+    a.btn.btn-outline-secondary(href="/") ⬅ Volver al Inicio
   h2.mb-3.fw-bold= publicacion.titulo
   
   if publicacion.imagenes.length > 0

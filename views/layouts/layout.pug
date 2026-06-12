@@ -73,16 +73,27 @@ html(lang="es")
           | Proyecto universitario para el trabajo práctico "FOTAZA 2" Programación Web 2 - ULP. Por Florencia M. Castro
     script.
       (function() {
-        var currentPath = window.location.pathname;
-        var ref = document.referrer;
+        const currentPath = window.location.pathname;
+        const ref = document.referrer;
+
+        const paginasAIgnorar = [
+          '/posts/create', 
+          '/auth/login', 
+          '/auth/register', 
+          '/comments', 
+          '/ratings'
+        ];
+        var esPaginaIgnorada = paginasAIgnorar.some(function(url) {
+          return ref.includes(url);
+        });
         if (ref && !ref.includes(currentPath) && !ref.includes('/comments') && !ref.includes('/ratings')) {
           sessionStorage.setItem('prev_page_' + currentPath, ref);
         }
       })();
 
       function goBack(fallback) {
-        var currentPath = window.location.pathname;
-        var guardado = sessionStorage.getItem('prev_page_' + currentPath);
+        const currentPath = window.location.pathname;
+        const guardado = sessionStorage.getItem('prev_page_' + currentPath);
         window.location.href = guardado ? guardado : (fallback || '/');
       }
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js")

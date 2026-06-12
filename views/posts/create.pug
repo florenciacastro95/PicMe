@@ -2,7 +2,7 @@ extends ../layouts/layout
 
 block content
 
-  a.btn.btn-sm.btn-outline-secondary.mb-3(href="#" onclick="goBack('/'); return false;") ⬅ Volver
+  a.btn.btn-sm.btn-outline-secondary.mb-3(href="/") ⬅ Volver al Inicio
   h2 Nueva publicación
   
   form(action="/posts/create" method="POST" enctype="multipart/form-data")
@@ -30,6 +30,7 @@ block content
         name="tags"
         placeholder="paisaje, verano, mascotas, comida"
       )
+      small.form-text.text-muted Separá las palabras utilizando comas para tags individuales.
     .mb-3
       label.form-label Imagen
 
@@ -39,6 +40,7 @@ block content
         accept="image/*"
         multiple
       )
+      small.form-text.text-muted Podés seleccionar hasta 10 imágenes en simultáneo. Tamaño máximo por archivo: 3 MB.
     .mb-3
       .form-check
         input.form-check-input(

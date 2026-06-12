@@ -49,3 +49,17 @@ block content
                     small.text-muted.d-block.pt-2
                       | Por 
                       a(href="/profile/" + pub.usuario.username)= pub.usuario.username
+    if totalPages > 1
+        nav.mt-4
+          ul.pagination.justify-content-center
+            if hasPrevPage
+              li.page-item
+                a.page-link(href=`/?page=${currentPage - 1}`) Anterior
+
+            - for (let i = 1; i <= totalPages; i++)
+              li.page-item(class=i === currentPage ? 'active' : '')
+                a.page-link(href=`/?page=${i}`)= i
+
+            if hasNextPage
+              li.page-item
+                a.page-link(href=`/?page=${currentPage + 1}`) Siguiente

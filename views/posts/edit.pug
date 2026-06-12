@@ -2,7 +2,7 @@ extends ../layouts/layout
 
 block content
 
-  a.btn.btn-sm.btn-outline-secondary.mb-3(href="#" onclick="goBack('/'); return false;") ⬅ Volver
+  a.btn.btn-sm.btn-outline-secondary.mb-3(href="/") ⬅ Volver al Inicio
   h2 Editar publicación
 
   form(
@@ -55,6 +55,7 @@ block content
         name="imagenes"
         multiple
       )
+      small.form-text.text-muted Elige archivos adicionales. Tamaño máximo por archivo: 3 MB.
     .mb-3
       .form-check
         input.form-check-input(

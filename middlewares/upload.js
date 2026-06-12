@@ -1,7 +1,7 @@
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-
+const path = require('path');
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -27,7 +27,7 @@ const fileFiltro = (req, file, cb) => {
     const extname = allowedTypes.test(
         path.extname(file.originalname).toLowerCase()
     );
-
+ 
     const mimetype = allowedTypes.test(file.mimetype);
 
     if (extname && mimetype) {
@@ -35,7 +35,7 @@ const fileFiltro = (req, file, cb) => {
     } else {
         cb(
             new Error(
-                'Solo se permiten imágenes'
+                'Solo se permiten imágenes (jpg, jpeg, png, gif, webp)'
             ),
             false
         );
@@ -44,9 +44,9 @@ const fileFiltro = (req, file, cb) => {
 
 const upload = multer({
     storage: storage,
-    fileFiltro: fileFiltro,
+    fileFilter: fileFiltro,
     limits: {
-        fileSize: 5 * 1024 * 1024
+        fileSize: 3 * 1024 * 1024
     }
 });
 

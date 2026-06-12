@@ -14,8 +14,14 @@ exports.create = async (req, res) => {
         try {
             if (err) {
                 console.error("Error de Multer al subir a Cloudinary:", err);
-                req.session.alert = { type: 'danger', text: 'Error al subir las imágenes a la nube.' };
-                return res.redirect('/posts/create');
+                let textoAlerta = 'Error al subir las imágenes a la nube.';
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    textoAlerta = 'Una o más imágenes superan el tamaño máximo permitido (Máx: 3MB).';
+                } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                    textoAlerta = 'No podés subir más de 10 imágenes.';
+                }
+                req.session.alert = { type: 'danger', text: textoAlerta };
+                return req.session.save(() => {return res.redirect('/posts/create');});
             }
             const { titulo, descripcion, tags, copyright } = req.body;
 
