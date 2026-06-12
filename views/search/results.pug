@@ -4,12 +4,60 @@ block metadata
   title= query ? 'Buscar: ' + query + ' - PicME!' : 'Buscar - PicME!'
 
 block content
-  if query
-    p.text-muted.mb-4
-      | Resultados para:
-      strong.ms-1 #{query}
-      if totalResults
-        |  — #{totalResults} encontrados
+  .container
+    h2.mb-4.fw-bold
+      i.bi.bi-sliders.me-2.text-pink
+      | Motor de Búsqueda PicMe!
+
+    .card.bg-light.shadow-sm.mb-5
+      .card-body.p-4
+        form(action="/search" method="GET")
+          .row.g-3
+            .col-10.col-md-6
+              label.form-label.small.fw-bold.text-muted Palabra clave (Título, descripción o usuario)
+              .input-group
+                span.input-group-text.bg-white
+                  i.bi.bi-search
+                input.form-control(
+                  type="text" 
+                  name="q" 
+                  placeholder="Ej: Comida, fmcastro..." 
+                  value=query
+                )
+
+            .col-6.col-md-3
+              label.form-label.small.fw-bold.text-muted Filtrar por #Tag
+              .input-group
+                span.input-group-text.bg-white #
+                input.form-control(
+                  type="text" 
+                  name="tag" 
+                  placeholder="mascitas" 
+                  value=tagFilter
+                )
+            .col-6.col-md-3
+              label.form-label.small.fw-bold.text-muted Tipo de resultado
+              select.form-select(name="filterType")
+                option(value="all" selected=filterType === 'all') Todo
+                option(value="publicaciones" selected=filterType === 'publicaciones') Publicaciones
+                option(value="usuarios" selected=filterType === 'usuarios') Usuarios
+
+            .col-12.col-md-4
+              label.form-label.small.fw-bold.text-muted Derechos de Autor
+              if !user
+                select.form-select(name="copyright" disabled)
+                  option(value="sin_copyright" selected) Solo imágenes libres (Modo Invitado)
+                small.form-text.text-danger Iniciá sesión para ver imágenes con copyright.
+              else
+                select.form-select(name="copyright")
+                  option(value="all" selected=copyrightFilter === 'all') Todos los derechos
+                  option(value="sin_copyright" selected=copyrightFilter === 'sin_copyright') Solo contenido libre (Sin Copyright)
+                  option(value="copyright" selected=copyrightFilter === 'copyright') Solo contenido protegido (Con Copyright)
+
+            .col-12.col-md-8.d-flex.align-items-end.justify-content-md-end
+              button.btn.btn-pink.px-4.w-100.w-md-auto(type="submit")
+                i.bi.bi-funnel-fill.me-2
+                | Aplicar filtros
 
   if publicaciones && publicaciones.length > 0
     .row
@@ -39,18 +87,15 @@ block content
         ul.pagination.justify-content-center
           if hasPrevPage
             li.page-item
-              a.page-link(href="/search?q=" + query + "&page=" + (currentPage - 1)) Anterior
+              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage - 1}`) Anterior
 
           - for (let i = 1; i <= totalPages; i++)
             li.page-item(class=i === currentPage ? 'active' : '')
-              a.page-link(href="/search?q=" + query + "&page=" + i)= i
+              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${i}`)= i
 
           if hasNextPage
             li.page-item
-              a.page-link(href="/search?q=" + query + "&page=" + (currentPage + 1)) Siguiente
+              a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage + 1}`) Siguiente
   else
     .alert.alert-info
-      if query
-        | No se encontraron resultados.
-      else
-        | Escribi un termino para buscar.
+      | No se encontraron resultados o la búsqueda está vacía.

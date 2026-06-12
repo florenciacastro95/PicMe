@@ -6,119 +6,133 @@ const searchController = {
         try {
             const user = req.session && req.session.user ? req.session.user : null;
             const q = req.query.q ? req.query.q.trim() : '';
+
+            const filterType = req.query.filterType || 'all';
+            const copyrightFilter = req.query.copyright || 'all';
+            const tagFilter = req.query.tag ? req.query.tag.trim() : '';
+
+
             const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
             const limit = 12;
             const offset = (page - 1) * limit;
 
-            if (!q) {
-                return res.render('search/results', {
-                    title: 'Buscar - PicME!',
-                    publicaciones: [],
-                    query: '',
-                    currentPage: 1,
-                    totalPages: 0,
-                    totalResults: 0,
-                    hasNextPage: false,
-                    hasPrevPage: false
+
+            let usuariosEncontrados = [];
+            let publicacionesEncontradas = [];
+            let totalResults = 0;
+            let totalPages = 0;
+
+            if (filterType === 'all' || filterType === 'usuarios') {
+                const whereUsuario = { activo: true };
+
+                if (q) {
+                    whereUsuario[Op.or] = [
+                        { username: { [Op.iLike]: `%${q}%` } },
+                        { nombre: { [Op.iLike]: `%${q}%` } }
+                    ];
+                }
+
+                usuariosEncontrados = await Usuario.findAll({
+                    where: whereUsuario,
+                    attributes: ['id', 'username', 'nombre', 'avatar'],
+                    limit: 30
                 });
             }
-            const searchTerm = q.toLowerCase();
+            if (filterType === 'all' || filterType === 'publicaciones') {
+                const wherePublicacion = { activo: true };
+                const andConditions = [];
 
-            const buildImageInclude = () => {
-                const imageInclude = {
-                    model: Imagen,
-                    as: 'imagenes'
-                };
+                if (q) {
+                    andConditions.push({
+                        [Op.or]: [
+                            { titulo: { [Op.iLike]: `%${q}%` } },
+                            { descripcion: { [Op.iLike]: `%${q}%` } },
+                            { '$usuario.username$': { [Op.iLike]: `%${q}%` } },
+                            { '$usuario.nombre$': { [Op.iLike]: `%${q}%` } },
+                            { '$tags.nombre$': { [Op.iLike]: `%${q}%` } }
+                        ]
+                    });
+                }
 
+                if (tagFilter) {
+                    andConditions.push({
+                        '$tags.nombre$': { [Op.iLike]: `%${tagFilter}%` }
+                    });
+                }
+
+                if (andConditions.length > 0) {
+                    wherePublicacion[Op.and] = andConditions;
+                }
+
+                const includeFiltro = [
+                    { model: Usuario, as: 'usuario', attributes: [] },
+                    { model: Tag, as: 'tags', attributes: [], through: { attributes: [] } }
+                ];
+
+                const imageIncludeFiltro = { model: Imagen, as: 'imagenes', attributes: [] };
                 if (!user) {
-                    imageInclude.where = { copyright: 'sin_copyright' };
-                    imageInclude.required = true;
+                    imageIncludeFiltro.where = { copyright: 'sin_copyright' };
+                    imageIncludeFiltro.required = true;
+                    includeFiltro.push(imageIncludeFiltro);
+                } else if (copyrightFilter !== 'all') {
+                    imageIncludeFiltro.where = { copyright: copyrightFilter };
+                    imageIncludeFiltro.required = true;
+                    includeFiltro.push(imageIncludeFiltro);
                 }
 
-                return imageInclude;
-            };
+                
+                const publicacionesFiltradas = await Publicacion.findAll({
+                    where: wherePublicacion,
+                    include: includeFiltro,
+                    attributes: ['id', 'created_at'],
+                    group: ['Publicacion.id', 'Publicacion.created_at'],
+                    order: [['created_at', 'DESC']]
+                });
 
-            const baseUserInclude =
-            {
-                model: Usuario,
-                as: 'usuario',
-                attributes: ['id', 'username', 'avatar', 'nombre']
-            };
-
-
-
-
-            //PRUEBA
-            console.log('SEARCH USER?', !!user);
-            console.log('IMAGE INCLUDE SEARCH:', buildImageInclude());
+                const todosLosIds = publicacionesFiltradas.map(p => p.id);
+                totalResults = todosLosIds.length;
+                totalPages = Math.ceil(totalResults / limit);
 
 
+                const idsPaginados = todosLosIds.slice(offset, offset + limit);
 
 
-            
-            const byContent = await Publicacion.findAll({
-                where: {
-                    activo: true,
-                    [Op.or]: [
-                        { titulo: { [Op.iLike]: `%${searchTerm}%` } },
-                        { descripcion: { [Op.iLike]: `%${searchTerm}%` } }
-                    ]
-                },
-                include: [buildImageInclude(), baseUserInclude, {
-                    model: Tag,
-                    as: 'tags',
-                    through: { attributes: [] }
-                }],
-                order: [['created_at', 'DESC']]
-            });
-
-            const byTags = await Publicacion.findAll({
-                where: { activo: true },
-                include: [
-                    buildImageInclude(),
-                    baseUserInclude,
-                    {
-                        model: Tag,
-                        as: 'tags',
-                        where: { nombre: { [Op.iLike]: `%${searchTerm}%` } },
-                        through: { attributes: [] }
-                    }
-                ],
-                order: [['created_at', 'DESC']]
-            });
-
-            const byUser = await Publicacion.findAll({
-                where: { activo: true },
-                include: [
-                    buildImageInclude(),
-                    {
-                        model: Usuario,
-                        as: 'usuario',
-                        attributes: ['id', 'username', 'avatar', 'nombre'],
-                        where: { username: { [Op.iLike]: `%${searchTerm}%` } }
-                    },
-                    { model: Tag, as: 'tags', through: { attributes: [] } }
-                ],
-                order: [['created_at', 'DESC']]
-            });
-
-            const combinadas = [];
-            const ids = new Set();
-
-            for (const pub of [...byContent, ...byTags, ...byUser]) {
-                if (!ids.has(pub.id)) {
-                    ids.add(pub.id);
-                    combinadas.push(pub);
+                let rows = [];
+                if (idsPaginados.length > 0) {
+                    rows = await Publicacion.findAll({
+                        where: { id: idsPaginados },
+                        include: [
+                            { model: Imagen, as: 'imagenes' },
+                            {
+                                model: Usuario,
+                                as: 'usuario',
+                                attributes: ['id', 'username', 'nombre', 'avatar']
+                            },
+                            {
+                                model: Tag,
+                                as: 'tags',
+                                through: { attributes: [] }
+                            }
+                        ],
+                        order: [['created_at', 'DESC']]
+                    });
                 }
+                publicacionesEncontradas = rows.map(pubInstance => {
+                    const pub = pubInstance.get({ plain: true });
+                    pub.copyright = (pub.imagenes && pub.imagenes.length > 0) ? pub.imagenes[0].copyright : null;
+                    return pub;
+                });
             }
 
-            const totalResults = combinadas.length;
-            const totalPages = Math.ceil(totalResults / limit);
 
             return res.render('search/results', {
                 title: `Buscar: ${q} - PicME!`,
-                publicaciones: combinadas.slice(offset, offset + limit),
+                publicaciones: publicacionesEncontradas,
+                usuarios: usuariosEncontrados,
                 query: q,
+                filterType,
+                copyrightFilter,
+                tagFilter,
                 currentPage: page,
                 totalPages,
                 totalResults,
