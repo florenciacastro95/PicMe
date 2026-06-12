@@ -59,6 +59,7 @@ exports.index = async (req, res) => {
                 });
             }
 
+            pub.totalImagenes = pub.imagenes ? pub.imagenes.length : 0;
             pub.promedioValoracion =
                 cantidadValoraciones > 0
                     ? (sumaPuntuaciones / cantidadValoraciones).toFixed(1)

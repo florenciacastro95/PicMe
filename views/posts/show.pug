@@ -4,7 +4,7 @@ block content
   .mb-3
     a.btn.btn-outline-secondary(
       href="#"
-      onclick="window.history.back(); return false;"
+      onclick="goBack('/'); return false;"
     )
       i.bi.bi-arrow-left.me-1
       | Volver
@@ -29,7 +29,7 @@ block content
                   |  votos
               .progress.mt-1(style="height:6px")
                 .progress-bar(
-                  style=`width:${((imagen.promedio || 0)/5)*100}%`
+                  style=`width:${((imagen.promedio || 0)/5)*100}%; background-color: var(--pink-dark, #ff65a3) !important;`
                 )
             if user && user.id !== publicacion.usuario_id
               form.d-flex.align-items-center(action="/ratings/imagen/" + imagen.id method="POST")

@@ -71,4 +71,18 @@ html(lang="es")
           | PicME!
         p.small.mb-0
           | Proyecto universitario para el trabajo práctico "FOTAZA 2" Programación Web 2 - ULP. Por Florencia M. Castro
+    script.
+      (function() {
+        var currentPath = window.location.pathname;
+        var ref = document.referrer;
+        if (ref && !ref.includes(currentPath) && !ref.includes('/comments') && !ref.includes('/ratings')) {
+          sessionStorage.setItem('prev_page_' + currentPath, ref);
+        }
+      })();
+
+      function goBack(fallback) {
+        var currentPath = window.location.pathname;
+        var guardado = sessionStorage.getItem('prev_page_' + currentPath);
+        window.location.href = guardado ? guardado : (fallback || '/');
+      }
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js")
