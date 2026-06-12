@@ -1,4 +1,4 @@
-const { Publicacion, Usuario, Imagen, Tag } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag, Rating } = require('../models');
 
 exports.index = async (req, res) => {
     try {
@@ -9,7 +9,11 @@ exports.index = async (req, res) => {
 
         const imageInclude = {
             model: Imagen,
-            as: 'imagenes'
+            as: 'imagenes',
+            include: [{
+                model: Rating,
+                as: 'ratings'
+            }]
         };
 
         if (!user) {
@@ -17,7 +21,7 @@ exports.index = async (req, res) => {
             imageInclude.required = true;
         }
 
-        const { count, rows: publicaciones } = await Publicacion.findAndCountAll({
+        const { count, rows: publicacionesModel } = await Publicacion.findAndCountAll({
             where: { activo: true },
             include: [{
                 model: Usuario,
@@ -38,6 +42,31 @@ exports.index = async (req, res) => {
 
         });
         const totalPages = Math.ceil(count / limit);
+        const publicaciones = publicacionesModel.map(pubInstance => {
+            const pub = pubInstance.get({ plain: true });
+
+            let sumaPuntuaciones = 0;
+            let cantidadValoraciones = 0;
+
+            if (pub.imagenes) {
+                pub.imagenes.forEach(img => {
+                    if (img.ratings) {
+                        img.ratings.forEach(rating => {
+                            sumaPuntuaciones += rating.puntuacion;
+                            cantidadValoraciones++;
+                        });
+                    }
+                });
+            }
+
+            pub.promedioValoracion =
+                cantidadValoraciones > 0
+                    ? (sumaPuntuaciones / cantidadValoraciones).toFixed(1)
+                    : null;
+
+            pub.cantidadValoraciones = cantidadValoraciones;
+            return pub;
+        });
         res.render('home/index', {
             title: 'PicME!',
             publicaciones,

@@ -28,7 +28,24 @@ block content
                 if pub.descripcion
                   p.card-text.flex-grow-1.small
                     = pub.descripcion
-                .mt-auto
-                  small.text-muted.d-block.pt-2
-                    | Por 
-                    a(href="/profile/" + pub.usuario.username)= pub.usuario.username
+                .mt-auto.pt-2.small.text-muted.mb-2
+                  .small.text-muted.mb-2
+                    span.me-3
+                      i.bi.bi-images.me-1
+                      = pub.totalImagenes
+                    span.me-3
+                      if pub.promedioValoracion
+                        = pub.promedioValoracion
+                      else
+                        | Sin votos
+                    if pub.copyright === 'copyright'
+                      span.text-warning
+                        i.bi.bi-c-circle.me-1
+                        | Copyright
+                    else
+                      span.text-success
+                        i.bi.bi-globe.me-1
+                        | Libre
+                    small.text-muted.d-block.pt-2
+                      | Por 
+                      a(href="/profile/" + pub.usuario.username)= pub.usuario.username

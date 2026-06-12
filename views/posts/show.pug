@@ -1,21 +1,13 @@
 extends ../layouts/layout
 
 block content
-  style.
-    .rating-box{
-      background:#fff;
-      border:1px solid #e9ecef;
-      border-radius:16px;
-      padding:14px;
-      margin-bottom:14px;
-      box-shadow:0 2px 8px rgba(0,0,0,.05);
-    }
-    .rating-score{
-      font-size:1.1rem;
-      font-weight:700;
-    }
   .mb-3
-    a.btn.btn-outline-secondary(href="#" onclick="window.history.back(); return false;") ⬅ Volver atrás
+    a.btn.btn-outline-secondary(
+      href="#"
+      onclick="window.history.back(); return false;"
+    )
+      i.bi.bi-arrow-left.me-1
+      | Volver
   h2.mb-3.fw-bold= publicacion.titulo
   
   if publicacion.imagenes.length > 0
@@ -27,22 +19,33 @@ block content
               src=imagen.url
               alt=publicacion.titulo
             )
-          .card-body.p-3
-            .d-flex.justify-content-between.align-items-center.mb-2
-              span
-                strong ⭐ #{imagen.promedio || '0.0'}
-                small.text-muted.ms-1 (#{imagen.totalVotos || 0} votos)
-
+            .small.mb-2
+              .d-flex.align-items-center.gap-3
+                span
+                  i.bi.bi-award-fill.me-1
+                  = imagen.promedio || '0.0'
+                span.text-muted
+                  = imagen.totalVotos || 0
+                  |  votos
+              .progress.mt-1(style="height:6px")
+                .progress-bar(
+                  style=`width:${((imagen.promedio || 0)/5)*100}%`
+                )
             if user && user.id !== publicacion.usuario_id
               form.d-flex.align-items-center(action="/ratings/imagen/" + imagen.id method="POST")
-                select.form-select.form-select-sm.me-2(name="puntuacion" required)
-                  option(value="") Nota...
-                  each val in [5, 4, 3, 2, 1]
-                    option(value=val selected=(imagen.miValoracion === val))= val + ' Estrellas'
-                button.btn.btn-sm.btn-primary(type="submit") Valorar
+                .btn-group.w-100
+                  each val in [1,2,3,4,5]
+                    button.btn.btn-outline-primary(
+                      type="submit"
+                      name="puntuacion"
+                      value=val
+                    )
+                      = val
             if publicacion.comentarios_habilitados
               hr
-              h6.text-secondary.small  Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
+              h6.text-secondary.small 
+                i.bi.bi-chat-dots-fill.me-1
+                | Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
               if user
                 form(action="/comments/" + imagen.id
                   method="POST")
@@ -57,14 +60,16 @@ block content
 
               if imagen.comentarios && imagen.comentarios.length > 0
                 each comentario in imagen.comentarios
-                  .card.mb-2.shadow-sm.border-0
+                  .card.mb-2.shadow-sm
                     .card-body.py-2
-                      strong.text-primary= comentario.usuario.username
+                      strong(style="color: var(--pink-dark)")
+                        = comentario.usuario.username
                       p.mt-2= comentario.contenido
                       if user && user.id === comentario.usuario_id
                         form(action="/comments/" + comentario.id + "/delete"
                           method="POST")
                           button.btn.btn-sm.btn-danger
+                            i.bi.bi-trash-fill.me-1
                             | Eliminar
               else
                   p.text-muted.small.text-center No hay comentarios aún.
@@ -74,8 +79,11 @@ block content
   
   p.mt-4.fs-5= publicacion.descripcion
   if publicacion.tags.length > 0
-    p
-      strong Tags:
+    div.mt-4
+      strong
+        i.bi.bi-tags-fill.me-1
+        | Tags:
+      br
       each tag in publicacion.tags
         a.post-tag(
           href="/search?q=" + tag.nombre
@@ -83,24 +91,30 @@ block content
           | ##{tag.nombre}
       hr.my-3
       p
-        strong Autor:
-          a.ms-1(
-            href="/profile/" + publicacion.usuario.username
-          )=publicacion.usuario.username
+        strong
+          i.bi.bi-person-fill.me-1
+          | Autor:
+        a.ms-1(
+          href="/profile/" + publicacion.usuario.username
+        )=publicacion.usuario.username
     if user && user.id == publicacion.usuario_id
       .d-flex.gap-2.mt-3.post-actions
         a.btn.btn-edit(href="/posts/" + publicacion.id + "/edit")
+          i.bi.bi-pencil-fill.me-1
           | Editar
 
         form(action="/posts/" + publicacion.id + "/delete"
           method="POST")
           button.btn.btn-danger
+            i.bi.bi-trash-fill.me-1
             | Eliminar
         form(action="/posts/" + publicacion.id + "/habcomments"
           method="POST")
           if publicacion.comentarios_habilitados
             button.btn.btn-comments
+              i.bi.bi-lock-fill.me-1
               | Deshabilitar comentarios
           else
             button.btn.btn-success
+              i.bi.bi-unlock-fill.me-1
               | Habilitar comentarios
