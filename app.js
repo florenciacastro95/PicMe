@@ -59,6 +59,10 @@ app.use(express.urlencoded({ extended: true }));
 
 //middleare para pasarusuario
 app.use(configVarLocals);
+app.get('/prueba500', (req, res) => {
+    //  simula un fallo real
+    throw new Error('Fallo simulado para el video');
+});
 
 // rutas
 app.use('/', homeRoutes);

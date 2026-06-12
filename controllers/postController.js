@@ -72,7 +72,7 @@ exports.create = async (req, res) => {
             return res.redirect('/posts/' + publicacion.id);
         } catch (error) {
             console.log('Error al crear publicación:', error);
-            req.session.alert = { type: 'danger', text: 'Error al crear la publicación.' };
+            return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Error al crear la publicación.' }});
             res.redirect('/posts/create');
         }
     });
@@ -120,14 +120,14 @@ exports.show = async (req, res) => {
         });
 
         if (!publicacion) {
-            req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' };
+            return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' }});
             return res.redirect('/');
         }
         let imagenesFiltradas = publicacion.imagenes;
         if (!userId) {
             imagenesFiltradas = publicacion.imagenes.filter(img => img.copyright === 'sin_copyright');
             if (imagenesFiltradas.length === 0) {
-                req.session.alert = { type: 'warning', text: 'Contenido protegido. Inicia sesión para verlo.' };
+                return req.session.save(() => {req.session.alert = { type: 'warning', text: 'Contenido protegido. Inicia sesión para verlo.' }});
                 return res.redirect('/');
             }
         }
@@ -278,7 +278,7 @@ exports.update = async (req, res) => {
 
     } catch (err) {
         console.error("Error en update controlador:", err);
-        req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' };
+        return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' }});
         return res.redirect('/');
     }
 
