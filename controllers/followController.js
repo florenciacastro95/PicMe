@@ -1,6 +1,11 @@
 const { Usuario, Seguidor } = require('../models');
 
-const follow = async (req, res) => {
+//voy a hacer el .save que tienen los redirects en una sola función así no lo repito 20 veces
+const saveRedirect = (req, res, path) => {
+    req.session.save(() => res.redirect(path));
+};
+
+exports.follow = async (req, res) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.session.user.id;
@@ -10,7 +15,7 @@ const follow = async (req, res) => {
                 type: 'warning',
                 text: 'No puedes seguirte a ti mismo.'
             };
-            return req.session.save(() => res.redirect('back'));
+            return saveRedirect(req, res, 'back');
         }
 
         const targetUser = await Usuario.findOne({
@@ -22,7 +27,7 @@ const follow = async (req, res) => {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
             };
-            return req.session.save(() => res.redirect('back'));
+            return saveRedirect(req, res, 'back');
         }
 
         const existingFollow = await Seguidor.findOne({
@@ -37,7 +42,7 @@ const follow = async (req, res) => {
                 type: 'info',
                 text: 'Ya sigues a este usuario.'
             };
-            return res.redirect('/profile/' + targetUser.username);
+            return saveRedirect(req, res, '/profile/' + targetUser.username);
         }
 
         await Seguidor.create({
@@ -50,10 +55,7 @@ const follow = async (req, res) => {
             text: 'Ahora sigues a ' + targetUser.username + '.'
         };
 
-        return req.session.save((err) => {
-            if (err) console.error('Error al guardar sesión en follow:', err);
-            return res.redirect('/profile/' + targetUser.username);
-        });
+        return saveRedirect(req, res, '/profile/' + targetUser.username);
 
     } catch (error) {
         console.error('Error al seguir:', error);
@@ -61,11 +63,11 @@ const follow = async (req, res) => {
             type: 'danger',
             text: 'Error al seguir al usuario.'
         };
-        return req.session.save(() => res.redirect('back'));
+        return saveRedirect(req, res, 'back');
     }
 };
 
-const unfollow = async (req, res) => {
+exports.unfollow = async (req, res) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.session.user.id;
@@ -80,7 +82,7 @@ const unfollow = async (req, res) => {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
             };
-            return req.session.save(() => res.redirect('/'));
+            return saveRedirect(req, res, '/');
         }
 
         const deleted = await Seguidor.destroy({
@@ -98,26 +100,17 @@ const unfollow = async (req, res) => {
         } else {
             req.session.alert = {
                 type: 'info',
-                text: 'No seguias a este usuario.'
+                text: 'No seguías a este usuario.'
             };
         }
 
-        return req.session.save((err) => {
-            if (err) console.error('Error al guardar sesión en unfollow:', err);
-            return res.redirect('/profile/' + targetUser.username);
-        });
-
+        return saveRedirect(req, res, '/profile/' + targetUser.username);
     } catch (error) {
         console.error('Error al dejar de seguir:', error);
         req.session.alert = {
             type: 'danger',
             text: 'Error al dejar de seguir al usuario.'
         };
-        return req.session.save(() => res.redirect('back'));
+        return saveRedirect(req, res, 'back');
     }
-};
-
-module.exports = {
-    follow,
-    unfollow
 };

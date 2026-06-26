@@ -1,6 +1,12 @@
 const bcrypt = require('bcrypt');
 const { Usuario } = require('../models');
 
+//voy a hacer el .save que tienen los redirects en una sola función así no lo repito 20 veces
+const saveRedirect = (req, res, path) => {
+    req.session.save(() => res.redirect(path));
+};
+
+
 exports.showLogin = (req, res) => {
     res.render('auth/login', {
         title: 'Iniciar sesión - PicME!'
@@ -8,18 +14,13 @@ exports.showLogin = (req, res) => {
 };
 
 exports.showRegister = (req, res) => {
-    res.render('auth/register',
-        {
+    res.render('auth/register',{
             title: 'Registrarse - PicME!'
-        }
-    );
+        });
 };
 
 exports.login = async (req, res) => {
     try {
-        console.log("esta llamandose a auth controller login")
-        console.log(req.body);
-
         const { username, password } = req.body;
         //campos vacios
         if (!username || !password) {
@@ -27,7 +28,7 @@ exports.login = async (req, res) => {
                 type: 'danger',
                 text: 'Tenés que completar usuario y contraseña.'
             };
-            return req.session.save(() => {return res.redirect('/auth/login');});
+            return saveRedirect(req, res, '/auth/login');
         }
 
         const user = await Usuario.findOne({
@@ -37,9 +38,9 @@ exports.login = async (req, res) => {
         if (!user) {
             req.session.alert = {
                 type: 'danger',
-                text: 'El nombre de usuario ingresado no existe.'
+                text: 'Usuario y/o contraseña incorrectos.'
             };
-            return req.session.save(() => {return res.redirect('/auth/login');});
+            return saveRedirect(req, res, '/auth/login');
         }
 
         //usaurio inactivo para despues 
@@ -48,16 +49,15 @@ exports.login = async (req, res) => {
                 type: 'warning', 
                 text: 'Tu cuenta se encuentra inactiva. Comunicate con soporte.'
             };
-            return req.session.save(() => {return res.redirect('/auth/login');});
+            return saveRedirect(req, res, '/auth/login');
         }
         const passwordMatch = await bcrypt.compare(password, user.password);
-        console.log(passwordMatch);
         if (!passwordMatch) {
             req.session.alert = {
                 type: 'danger',
                 text: 'La contraseña ingresada es incorrecta.'
             };
-            return req.session.save(() => {return res.redirect('/auth/login');});
+             return saveRedirect(req, res, '/auth/login');
         }
 
         req.session.user = {
@@ -72,16 +72,18 @@ exports.login = async (req, res) => {
             type: 'success',
             text: `Bienvenido/a, ${user.username}.`
         };
-        req.session.save(() => {
-            return res.redirect('/');
-        });
+
+        return saveRedirect(req, res, '/');
+
     } catch (error) {
         console.error('error en login authController', error);
 
         req.session.alert = {
             type: 'danger',
             text: 'Hubo un error al iniciar sesión.'
-        }; return res.redirect('/auth/login');
+        }; 
+        
+        return saveRedirect(req, res, '/auth/login');
     }
 
 };
@@ -103,7 +105,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'Tenés que completar todos los campos obligatorios'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
         //usuario >3 caracteres
@@ -112,7 +114,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'El nombre de usuario debe tener al menos 3 caracteres.'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -121,7 +123,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'Por favor, ingresá un correo electrónico válido.'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
         //contras que deben coincidir
@@ -130,7 +132,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'Las contraseñas no coinciden.'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
         //contraseña con al menos 6 caracteres e incluir al menos un número
@@ -140,7 +142,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'La contrasena debe tener al menos 6 caracteres e incluir al menos un número.'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
 
@@ -154,7 +156,7 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'Ese email ya está existe. Probá con otro'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
         //verificar usuario existente
@@ -166,37 +168,32 @@ exports.register = async (req, res) => {
                 type: 'danger',
                 text: 'Ese nombre de usuario ya existe. Probá con otro'
             };
-            return req.session.save(() => {return res.redirect('/auth/register');});
+            return saveRedirect(req, res, '/auth/register');
         }
         
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        console.log('usuario listolas para guardar');
-        const newwuser = await Usuario.create({
+        await Usuario.create({
             username,
             email,
             password: hashedPassword,
             nombre: nombre
         });
 
-        console.log(newwuser.toJSON());
         req.session.alert = {
             type: 'success',
             text: 'Usuario registrado correctamente. Ahora podés iniciar sesión.'
         };
-        req.session.save(() => {
-            return res.redirect('/auth/login');
-        });
+        return saveRedirect(req, res, '/auth/login');
 
     } catch (error) {
-        console.log("error al registrar usuario en authController:register" + error);
+        console.error("error al registrar usuario en authController:register", error);
         req.session.alert = {
             type: 'danger',
             text: 'Error al registrar el usuario.'
         };
-
-        return req.session.save(() => {return res.redirect('/auth/register');});
+        return saveRedirect(req, res, '/auth/register');
     }
 };
 

@@ -2,14 +2,15 @@ const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating } 
 const upload = require('../middlewares/upload');
 const cloudinary = require('cloudinary').v2;
 
+const saveRedirect = (req, res, path) => {
+    req.session.save(() => res.redirect(path));
+};
+
 exports.showCreate = (req, res) => {
     res.render('posts/create');
 };
 
 exports.create = async (req, res) => {
-    console.log("--- INTENTANDO CREAR PUBLICACION ---");
-
-
     upload.array('imagenes', 10)(req, res, async (err) => {
         try {
             if (err) {
@@ -21,7 +22,7 @@ exports.create = async (req, res) => {
                     textoAlerta = 'No podés subir más de 10 imágenes.';
                 }
                 req.session.alert = { type: 'danger', text: textoAlerta };
-                return req.session.save(() => {return res.redirect('/posts/create');});
+                return saveRedirect(req, res, '/posts/create');
             }
             const { titulo, descripcion, tags, copyright } = req.body;
 
@@ -29,12 +30,12 @@ exports.create = async (req, res) => {
 
             if (!titulo || titulo.trim() === '') {
                 req.session.alert = { type: 'danger', text: 'El título es obligatorio.' };
-                return res.redirect('/posts/create');
+                return saveRedirect(req, res, '/posts/create');
             }
 
             if (!req.files || req.files.length === 0) {
                 req.session.alert = { type: 'danger', text: 'Tenés que subir al menos una imagen.' };
-                return res.redirect('/posts/create');
+                return saveRedirect(req, res, '/posts/create');
             }
 
             const publicacion = await Publicacion.create({
@@ -72,8 +73,7 @@ exports.create = async (req, res) => {
             return res.redirect('/posts/' + publicacion.id);
         } catch (error) {
             console.log('Error al crear publicación:', error);
-            return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Error al crear la publicación.' }});
-            res.redirect('/posts/create');
+            return saveRedirect(req, res, '/posts/create');
         }
     });
 }
@@ -82,8 +82,7 @@ exports.show = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.user ? req.session.user.id : null;
-        const publicacion = await Publicacion.findOne({
-            where: { id, activo: true },
+        const publicacion = await Publicacion.findByPk(id, {
             include: [{
                 model: Imagen,
                 as: 'imagenes',
@@ -119,16 +118,16 @@ exports.show = async (req, res) => {
             ]
         });
 
-        if (!publicacion) {
-            return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' }});
-            return res.redirect('/');
+        if (!publicacion|| !publicacion.activo) {
+            req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' };
+            return saveRedirect(req, res, '/');
         }
         let imagenesFiltradas = publicacion.imagenes;
         if (!userId) {
             imagenesFiltradas = publicacion.imagenes.filter(img => img.copyright === 'sin_copyright');
             if (imagenesFiltradas.length === 0) {
-                return req.session.save(() => {req.session.alert = { type: 'warning', text: 'Contenido protegido. Inicia sesión para verlo.' }});
-                return res.redirect('/');
+                req.session.alert = { type: 'warning', text: 'Contenido protegido. Inicia sesión para verlo.' };
+                return saveRedirect(req, res, '/');
             }
         }
         const imagenesConStats = imagenesFiltradas.map(img => {
@@ -166,8 +165,7 @@ exports.showEdit = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.user.id;
-        const publicacion = await Publicacion.findOne({
-            where: { id, usuario_id: userId, activo: true },
+        const publicacion = await Publicacion.findByPk(id, {
             include: [
                 { model: Imagen, as: 'imagenes' },
                 { model: Tag, as: 'tags', through: { attributes: [] } }
@@ -196,12 +194,11 @@ exports.update = async (req, res) => {
         const { id } = req.params;
         const userId = req.session.user.id;
         const { titulo, descripcion, tags, copyright_existente, imagenesEliminar } = req.body;
-        const publicacion = await Publicacion.findOne({
-            where: { id, usuario_id: userId, activo: true },
+        const publicacion = await Publicacion.findByPk(id, {
             include: [{ model: Imagen, as: 'imagenes' }]
         });
 
-        if (!publicacion) {
+        if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId){
             return res.redirect('/');
         }
 
@@ -278,8 +275,8 @@ exports.update = async (req, res) => {
 
     } catch (err) {
         console.error("Error en update controlador:", err);
-        return req.session.save(() => {req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' }});
-        return res.redirect('/');
+        req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' };
+        return saveRedirect(req, res, '/');
     }
 
 };
@@ -289,9 +286,7 @@ exports.changeComments = async (req, res) => {
         const { id } = req.params;
         const userId = req.session.user.id;
 
-        const publicacion = await Publicacion.findOne({
-            where: { id, usuario_id: userId, activo: true }
-        });
+        const publicacion = await Publicacion.findByPk(id);
 
         if (!publicacion) return res.redirect('/');
 
