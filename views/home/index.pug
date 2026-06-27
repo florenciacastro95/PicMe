@@ -38,7 +38,7 @@ block content
                         = pub.promedioValoracion
                       else
                         | Sin votos
-                    if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes[0] && pub.imagenes[0].copyright === 'copyright')
+                    if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes.length > 0 && pub.imagenes[0].copyright === 'copyright')
                       span.text-warning
                         i.bi.bi-c-circle.me-1
                         | Copyright
@@ -50,16 +50,25 @@ block content
                       | Por 
                       a(href="/profile/" + pub.usuario.username)= pub.usuario.username
     if totalPages > 1
-        nav.mt-4
+        nav.mt-4(aria-label="Navegación de páginas")
           ul.pagination.justify-content-center
             if hasPrevPage
               li.page-item
                 a.page-link(href=`/?page=${currentPage - 1}`) Anterior
-
+            else
+              li.page-item.disabled
+                span.page-link Anterior
             - for (let i = 1; i <= totalPages; i++)
-              li.page-item(class=i === currentPage ? 'active' : '')
-                a.page-link(href=`/?page=${i}`)= i
+              if i === currentPage
+                li.page-item.active(aria-current="page")
+                  span.page-link= i
+              else
+                li.page-item
+                  a.page-link(href=`/?page=${i}`)= i
 
             if hasNextPage
               li.page-item
                 a.page-link(href=`/?page=${currentPage + 1}`) Siguiente
+            else
+              li.page-item.disabled
+                span.page-link Siguiente

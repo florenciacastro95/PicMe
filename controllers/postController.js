@@ -1,4 +1,4 @@
-const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating, sequelize } = require('../models');
 const upload = require('../middlewares/upload');
 const cloudinary = require('cloudinary').v2;
 
@@ -48,7 +48,7 @@ exports.create = async (req, res) => {
             if (copyright === 'on' || copyright === true || copyright === 'copyright') {
                 valorCopyright = 'copyright';
             }
-            
+
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
                 await Imagen.create({
@@ -58,7 +58,7 @@ exports.create = async (req, res) => {
 
             //-*-*
             if (tags && tags.trim() !== '') {
-                const tagsN = req.body.tags.split(',').map(t => t.trim()).filter(Boolean);
+                const tagsN = tags.split(',').map(t => t.trim()).filter(Boolean);
 
                 for (const nombreTag of tagsN) {
 
@@ -70,7 +70,7 @@ exports.create = async (req, res) => {
                 }
             }
             req.session.alert = { type: 'success', text: 'Publicación creada!' };
-            return res.redirect('/posts/' + publicacion.id);
+            return saveRedirect(req, res, '/posts/' + publicacion.id);
         } catch (error) {
             console.log('Error al crear publicación:', error);
             return saveRedirect(req, res, '/posts/create');
@@ -82,10 +82,16 @@ exports.show = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.user ? req.session.user.id : null;
-        const publicacion = await Publicacion.findByPk(id, {
+        const publicacion = await Publicacion.findOne({where : {id, activo: true},
             include: [{
                 model: Imagen,
                 as: 'imagenes',
+                attributes: {
+                    include: [
+                        [sequelize.fn('COALESCE', sequelize.fn('AVG', sequelize.col('imagenes.ratings.puntuacion')), 0), 'promedioRating'],
+                        [sequelize.fn('COUNT', sequelize.col('imagenes.ratings.id')), 'totalVotos']
+                    ]
+                },
                 include: [
                     {
                         model: Comentario,
@@ -98,7 +104,8 @@ exports.show = async (req, res) => {
                             }]
                     }, {
                         model: Rating,
-                        as: 'ratings'
+                        as: 'ratings',
+                        attributes: []
                     }]
             },
             {
@@ -110,7 +117,14 @@ exports.show = async (req, res) => {
                 model: Tag,
                 as: 'tags',
                 through: { attributes: [] }
-            },
+            }],
+            group: [
+                'Publicacion.id',
+                'imagenes.id',
+                'imagenes->comentarios.id',
+                'imagenes->comentarios->usuario.id',
+                'usuario.id',
+                'tags.id'
             ],
             order: [
                 [{ model: Imagen, as: 'imagenes' }, 'orden', 'ASC'],
@@ -118,7 +132,7 @@ exports.show = async (req, res) => {
             ]
         });
 
-        if (!publicacion|| !publicacion.activo) {
+        if (!publicacion || !publicacion.activo) {
             req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' };
             return saveRedirect(req, res, '/');
         }
@@ -130,19 +144,22 @@ exports.show = async (req, res) => {
                 return saveRedirect(req, res, '/');
             }
         }
+        let misVotos = [];
+        if (userId && imagenesFiltradas.length > 0) {
+            misVotos = await Rating.findAll({
+                where: {
+                    usuario_id: userId,
+                    imagen_id: imagenesFiltradas.map(img => img.id)
+                }
+            });
+        }
         const imagenesConStats = imagenesFiltradas.map(img => {
-            const ratings = img.ratings || [];
-            const promedio = ratings.length > 0
-                ? (ratings.reduce((sum, r) => sum + r.puntuacion, 0) / ratings.length).toFixed(1)
-                : '0.0';
-            const totalVotos = ratings.length;
-            const miVoto = userId ? ratings.find(r => r.usuario_id === userId) : null;
-
+            const votoUsuario = misVotos.find(v => v.imagen_id === img.id);
             return {
                 ...img.toJSON(),
-                promedio,
-                totalVotos,
-                miValoracion: miVoto ? miVoto.puntuacion : null
+                promedio: parseFloat(img.get('promedioRating')).toFixed(1),
+                totalVotos: parseInt(img.get('totalVotos')),
+                miValoracion: votoUsuario ? votoUsuario.puntuacion : null
             };
         });
 
@@ -188,97 +205,109 @@ exports.showEdit = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-    console.log("--- INTENTANDO EDITAR PUBLICACION ---");
+    upload.array('imagenes', 10)(req, res, async (err) => {
+        try {
 
-    try {
-        const { id } = req.params;
-        const userId = req.session.user.id;
-        const { titulo, descripcion, tags, copyright_existente, imagenesEliminar } = req.body;
-        const publicacion = await Publicacion.findByPk(id, {
-            include: [{ model: Imagen, as: 'imagenes' }]
-        });
-
-        if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId){
-            return res.redirect('/');
-        }
-
-        await publicacion.update({
-            titulo: req.body.titulo,
-            descripcion: descripcion ? descripcion.trim() : null
-        });
-
-
-        if (copyright_existente) {
-            const copyrightObj = typeof copyright_existente === 'object' ? copyright_existente : {};
-            for (const [imgId, value] of Object.entries(copyrightObj)) {
-                await Imagen.update(
-                    { copyright: value },
-                    { where: { id: imgId, publicacion_id: publicacion.id } }
-                );
-            }
-        }
-        if (imagenesEliminar) {
-
-            const ids = Array.isArray(imagenesEliminar)
-                ? imagenesEliminar
-                : [imagenesEliminar];
-
-            const imagenesABorrar = await Imagen.findAll({ where: { id: ids, publicacion_id: publicacion.id } });
-
-
-            for (const img of imagenesABorrar) {
-                try {
-                    const partesUrl = img.url.split('/')
-                    const folderYArchivo = partesUrl.slice(-2).join('/');
-                    const publicId = folderYArchivo.split('.')[0];
-
-                    await cloudinary.uploader.destroy(publicId);
-                    console.log(`Eliminado físico en Cloudinary exitoso: ${publicId}`);
-                } catch (cloudErr) {
-                    console.error("Error al borrar archivo físico de Cloudinary:", cloudErr);
+            if (err) {
+                console.error("Error de Multer al editar:", err);
+                let textoAlerta = 'Error al subir las nuevas imágenes.';
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    textoAlerta = 'Una o más imágenes superan los 3MB.';
+                } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                    textoAlerta = 'No podés subir más de 10 imágenes.';
                 }
+                req.session.alert = { type: 'danger', text: textoAlerta };
+                return saveRedirect(req, res, `/posts/${req.params.id}/edit`);
             }
-            await Imagen.destroy({
-                where: { id: ids, publicacion_id: publicacion.id }
+
+            const { id } = req.params;
+            const userId = req.session.user.id;
+            const { titulo, descripcion, tags, copyright_existente, imagenesEliminar } = req.body;
+            const publicacion = await Publicacion.findByPk(id, {
+                include: [{ model: Imagen, as: 'imagenes' }]
             });
 
-        }
-        if (req.files && req.files.length > 0) {
-            const newCopyright = req.body.copyright_nuevo || req.body.copyright;
-            const copyrightValues = Array.isArray(newCopyright) ? newCopyright : [newCopyright];
-            for (let i = 0; i < req.files.length; i++) {
-                const file = req.files[i];
-                let copyrightValue = copyrightValues[i] || 'sin_copyright';
-                if (newCopyright === 'on') copyrightValue = 'copyright';
-
-                await Imagen.create({
-                    publicacion_id: publicacion.id,
-                    url: file.path,
-                    copyright: copyrightValue
-                });
+            if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId) {
+                return res.redirect('/');
             }
-        }
 
-        if (tags !== undefined) {
-            await PublicacionTag.destroy({ where: { publicacion_id: publicacion.id } });
-            if (tags.trim() !== '') {
-                const tagNames = tags.split(',').map(t => t.trim()).filter(Boolean);
-                for (const nombreTag of tagNames) {
-                    let [tag] = await Tag.findOrCreate({ where: { nombre: nombreTag } });
-                    await PublicacionTag.create({ publicacion_id: publicacion.id, tag_id: tag.id });
+            await publicacion.update({
+                titulo: req.body.titulo,
+                descripcion: descripcion ? descripcion.trim() : null
+            });
+
+
+            if (copyright_existente) {
+                const copyrightObj = typeof copyright_existente === 'object' ? copyright_existente : {};
+                for (const [imgId, value] of Object.entries(copyrightObj)) {
+                    await Imagen.update(
+                        { copyright: value },
+                        { where: { id: imgId, publicacion_id: publicacion.id } }
+                    );
                 }
             }
+            if (imagenesEliminar) {
+
+                const ids = Array.isArray(imagenesEliminar)
+                    ? imagenesEliminar
+                    : [imagenesEliminar];
+
+                const imagenesABorrar = await Imagen.findAll({ where: { id: ids, publicacion_id: publicacion.id } });
+
+
+                for (const img of imagenesABorrar) {
+                    try {
+                        const partesUrl = img.url.split('/')
+                        const folderYArchivo = partesUrl.slice(-2).join('/');
+                        const publicId = folderYArchivo.split('.')[0];
+
+                        await cloudinary.uploader.destroy(publicId);
+                        console.log(`Eliminado físico en Cloudinary exitoso: ${publicId}`);
+                    } catch (cloudErr) {
+                        console.error("Error al borrar archivo físico de Cloudinary:", cloudErr);
+                    }
+                }
+                await Imagen.destroy({
+                    where: { id: ids, publicacion_id: publicacion.id }
+                });
+
+            }
+            if (req.files && req.files.length > 0) {
+                const newCopyright = req.body.copyright_nuevo || req.body.copyright;
+                const copyrightValues = Array.isArray(newCopyright) ? newCopyright : [newCopyright];
+                for (let i = 0; i < req.files.length; i++) {
+                    const file = req.files[i];
+                    let copyrightValue = copyrightValues[i] || 'sin_copyright';
+                    if (newCopyright === 'on') copyrightValue = 'copyright';
+
+                    await Imagen.create({
+                        publicacion_id: publicacion.id,
+                        url: file.path,
+                        copyright: copyrightValue
+                    });
+                }
+            }
+
+            if (tags !== undefined) {
+                await PublicacionTag.destroy({ where: { publicacion_id: publicacion.id } });
+                if (tags.trim() !== '') {
+                    const tagNames = tags.split(',').map(t => t.trim()).filter(Boolean);
+                    for (const nombreTag of tagNames) {
+                        let [tag] = await Tag.findOrCreate({ where: { nombre: nombreTag } });
+                        await PublicacionTag.create({ publicacion_id: publicacion.id, tag_id: tag.id });
+                    }
+                }
+            }
+
+            const urlPublicacion = `/posts/${publicacion.id}`;
+            res.redirect(urlPublicacion);
+
+        } catch (err) {
+            console.error("Error en update controlador:", err);
+            req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' };
+            return saveRedirect(req, res, '/');
         }
-
-        const urlPublicacion = `/posts/${publicacion.id}`;
-        res.redirect(urlPublicacion);
-
-    } catch (err) {
-        console.error("Error en update controlador:", err);
-        req.session.alert = { type: 'danger', text: 'Error al actualizar la publicación.' };
-        return saveRedirect(req, res, '/');
-    }
-
+    });
 };
 
 exports.changeComments = async (req, res) => {
@@ -297,9 +326,9 @@ exports.changeComments = async (req, res) => {
             type: 'success',
             text: publicacion.comentarios_habilitados ? 'Comentarios habilitados.' : 'Comentarios deshabilitados.'
         };
-        return res.redirect('/posts/' + id);
+        return saveRedirect(req, res, '/posts/' + id);
     } catch (error) {
-        return res.redirect('/posts/' + req.params.id);
+        return saveRedirect(req, res, '/posts/' + req.params.id);
     }
 };
 
@@ -319,7 +348,7 @@ exports.destroy = async (req, res) => {
 
         req.session.alert = { type: 'success', text: 'Publicación eliminada.' };
 
-        res.redirect('/');
+        return saveRedirect(req, res, '/');
     } catch (error) {
         res.redirect('/');
     }

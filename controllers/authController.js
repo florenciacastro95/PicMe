@@ -55,7 +55,7 @@ exports.login = async (req, res) => {
         if (!passwordMatch) {
             req.session.alert = {
                 type: 'danger',
-                text: 'La contraseña ingresada es incorrecta.'
+                text: 'Usuario y/o contraseña incorrectos.'
             };
              return saveRedirect(req, res, '/auth/login');
         }

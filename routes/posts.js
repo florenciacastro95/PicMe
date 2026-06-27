@@ -16,12 +16,11 @@ router.get('/:id',
     postController.show);
 
 router.get('/:id/edit',
-    isAuthenticated, upload.array('imagenes', 10),
+    isAuthenticated,
     postController.showEdit);
 
 router.post('/:id/edit',
     isAuthenticated,
-    upload.array('imagenes', 10),
     postController.update);
 
 router.post('/:id/delete',

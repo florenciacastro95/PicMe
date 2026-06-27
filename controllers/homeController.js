@@ -20,9 +20,7 @@ exports.index = async (req, res) => {
             imageInclude.where = { copyright: 'sin_copyright' };
             imageInclude.required = true;
         }
-
-        const { count, rows: publicacionesModel } = await Publicacion.findAndCountAll({
-            where: { activo: true },
+        const { count, rows: publicacionesModel } = await Publicacion.findAndCountAll({where: { activo: true },
             include: [{
                 model: Usuario,
                 as: 'usuario',
@@ -39,7 +37,6 @@ exports.index = async (req, res) => {
             limit,
             offset,
             distinct: true
-
         });
         const totalPages = Math.ceil(count / limit);
         const publicaciones = publicacionesModel.map(pubInstance => {
@@ -47,7 +44,6 @@ exports.index = async (req, res) => {
 
             let sumaPuntuaciones = 0;
             let cantidadValoraciones = 0;
-
             if (pub.imagenes) {
                 pub.imagenes.forEach(img => {
                     if (img.ratings) {
@@ -74,7 +70,8 @@ exports.index = async (req, res) => {
             currentPage: page,
             totalPages,
             hasNextPage: page < totalPages,
-            hasPrevPage: page > 1
+            hasPrevPage: page > 1,
+            user
         });
     }
     catch (err) {
@@ -87,7 +84,8 @@ exports.index = async (req, res) => {
             title: 'PicME! - Comparte, mira, pickea :3',
             publicaciones: [],
             currentPage: 1,
-            totalPages: 0
+            totalPages: 0,
+            user
         });
     }
 

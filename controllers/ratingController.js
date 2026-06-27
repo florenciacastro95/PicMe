@@ -1,5 +1,7 @@
 const { Rating, Imagen, Publicacion } = require('../models');
-
+const saveRedirect = (req, res, path) => {
+    req.session.save(() => res.redirect(path));
+};
 exports.rate = async (req, res) => {
     let urlPublicacion = '/';
     try {
@@ -30,7 +32,7 @@ exports.rate = async (req, res) => {
             req.session.alert = {
                 type: 'danger',
                 text: 'Imagen no encontrada.'
-            };return res.redirect('/');
+            };return saveRedirect(req, res, '/')
         }
         urlPublicacion = '/posts/' + imagen.publicacion_id;
 
@@ -40,14 +42,14 @@ exports.rate = async (req, res) => {
                 type: 'danger',
                 text: 'La puntuacion debe estar entre 1 y 5.'
             };
-            return res.redirect(urlPublicacion);
+            return saveRedirect(req, res, urlPublicacion)
         }
         if (imagen.publicacion.usuario_id === usuarioId) {
             req.session.alert = {
                 type: 'warning',
                 text: 'No puedes valorar tus propias imagenes.'
             };
-            return res.redirect(urlPublicacion);
+            return saveRedirect(req, res, urlPublicacion)
         }
         const existente = await Rating.findOne({
             where: {
@@ -76,8 +78,7 @@ exports.rate = async (req, res) => {
             };
         }
 
-    
-        return req.session.save(() =>res.redirect(urlPublicacion));
+        return saveRedirect(req, res, urlPublicacion)
 
     } catch (error) {
         console.error('Error al valorar:', error);
@@ -85,7 +86,7 @@ exports.rate = async (req, res) => {
             type: 'danger',
             text: 'Error al registrar la valoracion.'
         };
-        return res.redirect(urlPublicacion);
+        return saveRedirect(req, res, urlPublicacion);
         
     }
 };

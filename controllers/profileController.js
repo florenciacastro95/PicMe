@@ -1,6 +1,11 @@
 const { Usuario, Publicacion, Imagen, Seguidor, Tag } = require('../models');
 
-const show = async (req, res) => {
+const saveRedirect = (req, res, path) => {
+    req.session.save(() => res.redirect(path));
+};
+
+
+exports.show = async (req, res) => {
     try {
         const { username } = req.params;
         const currentUserId = req.session.user ? req.session.user.id : null;
@@ -15,7 +20,7 @@ const show = async (req, res) => {
             });
         if (!usuario) {
             req.session.alert = { type: 'danger', text: 'Usuario no encontrado.' };
-            return res.redirect('/');
+            return saveRedirect(req, res, '/');
         }
         let imageCondition = {};
         if (!currentUserId) {
@@ -64,12 +69,12 @@ const show = async (req, res) => {
             type: 'danger',
             text: 'Error al cargar el perfil.'
         };
-        return res.redirect('/');
+        return saveRedirect(req, res, '/');
     }
 
 };
 
-const followers = async (req, res) => {
+exports.followers = async (req, res) => {
     try {
         const { username } = req.params;
         const currentUserId = req.session.user ? req.session.user.id : null;
@@ -79,32 +84,37 @@ const followers = async (req, res) => {
             req.session.alert = {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
-            };return res.redirect('/');}
+            }; return saveRedirect(req, res, '/');
+        }
 
         const seguidores = await Seguidor.findAll({
             where: { seguido_id: usuario.id },
             include: [{ model: Usuario, as: 'seguidor', attributes: ['id', 'username', 'nombre', 'avatar'] }]
         });
 
-        const seguidoresConEstado = await Promise.all(
-            seguidores.map(async (item) => {
-                const seguidor = item.seguidor.toJSON();
-                let isFollowing = false;
-                if (currentUserId && currentUserId !== seguidor.id) {
-                    const follow = await Seguidor.findOne({
-                        where: { seguidor_id: currentUserId, seguido_id: seguidor.id }
-                    });
-                    isFollowing = !!follow;
-                }
-                return { ...seguidor, isFollowing, isOwnProfile: currentUserId === seguidor.id };
-            })
-        );
+        const idsSeguidores = seguidores.map(s => s.seguidor_id);
+        let followMap = {};
+        if (currentUserId && idsSeguidores.length > 0) {
+            const misFollows = await Seguidor.findAll({
+                where: { seguidor_id: currentUserId, seguido_id: idsSeguidores }
+            });
+            misFollows.forEach(f => { followMap[f.seguido_id] = true; });
+        }
+
+        const seguidoresConEstado = seguidores.map(item => {
+            const seguidor = item.seguidor.toJSON();
+            return {
+                ...seguidor,
+                isFollowing: currentUserId ? !!followMap[seguidor.id] : false,
+                isOwnProfile: currentUserId === seguidor.id
+            };
+        });
 
         return res.render('profile/followers', {
             title: `Seguidores de ${usuario.username} - PicME!`,
             perfil: usuario,
             seguidores: seguidoresConEstado,
-            tipo:seguidores
+            tipo: 'seguidores'
         });
     } catch (error) {
         console.error('Error al ver seguidores:', error);
@@ -112,12 +122,12 @@ const followers = async (req, res) => {
             type: 'danger',
             text: 'Error al cargar seguidores.'
         };
-        return res.redirect('/');
+        return saveRedirect(req, res, '/');
     }
 };
 
 
-const following = async (req, res) => {
+exports.following = async (req, res) => {
     try {
         const { username } = req.params;
         const currentUserId = req.session.user ? req.session.user.id : null;
@@ -127,26 +137,31 @@ const following = async (req, res) => {
             req.session.alert = {
                 type: 'danger',
                 text: 'Usuario no encontrado.'
-            };return res.redirect('/');}
+            }; return saveRedirect(req, res, '/');;
+        }
 
         const seguidos = await Seguidor.findAll({
             where: { seguidor_id: usuario.id },
             include: [{ model: Usuario, as: 'seguido', attributes: ['id', 'username', 'nombre', 'avatar'] }]
         });
 
-        const seguidosConEstado = await Promise.all(
-            seguidos.map(async (item) => {
-                const seguido = item.seguido.toJSON();
-                let isFollowing = false;
-                if (currentUserId && currentUserId !== seguido.id) {
-                    const follow = await Seguidor.findOne({
-                        where: { seguidor_id: currentUserId, seguido_id: seguido.id }
-                    });
-                    isFollowing = !!follow;
-                }
-                return { ...seguido, isFollowing, isOwnProfile: currentUserId === seguido.id };
-            })
-        );
+        const idsSeguidos = seguidos.map(s => s.seguido_id);
+        let followMap = {};
+        if (currentUserId && idsSeguidos.length > 0) {
+            const misFollows = await Seguidor.findAll({
+                where: { seguidor_id: currentUserId, seguido_id: idsSeguidos }
+            });
+            misFollows.forEach(f => { followMap[f.seguido_id] = true; });
+        }
+
+        const seguidosConEstado = seguidos.map(item => {
+            const seguido = item.seguido.toJSON();
+            return {
+                ...seguido,
+                isFollowing: currentUserId ? !!followMap[seguido.id] : false,
+                isOwnProfile: currentUserId === seguido.id
+            };
+        });
 
         return res.render('profile/folowing', {
             title: `Seguidos por ${usuario.username} - PicME!`,
@@ -160,12 +175,6 @@ const following = async (req, res) => {
             type: 'danger',
             text: 'Error al cargar seguidos.'
         };
-        return res.redirect('/');
+        return saveRedirect(req, res, '/');
     }
-};
-
-module.exports = {
-    show,
-    followers,
-    following
 };
