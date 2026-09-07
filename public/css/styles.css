@@ -143,9 +143,10 @@ h2{
 }
 
 .btn-edit{
-    background:#ffc107;
+    background:#ff7207;
     border:none;
     border-radius:20px;
+    color:white;
 }
 
 .btn-delete{
