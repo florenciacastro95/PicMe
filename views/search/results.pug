@@ -140,8 +140,18 @@ block content
             if hasNextPage
               li.page-item
                 a.page-link(href=`/search?q=${query}&tag=${tagFilter}&filterType=${filterType}&copyright=${copyrightFilter}&page=${currentPage + 1}`) Siguiente
-    else
-      if filterType !== 'usuarios'
-        .alert.alert-info.shadow-sm.mt-3
-          i.bi.bi-info-circle-fill.me-2
-          | No se encontraron publicaciones con los criterios seleccionados. Intentá removiendo filtros.
+    if filterType === 'usuarios' && (!usuarios || usuarios.length === 0)
+      .alert.alert-warning.shadow-sm.mt-3.p-3
+        i.bi.bi-person-x-fill.me-2
+        | No se encontraron usuarios que coincidan con la búsqueda.
+
+    else if filterType === 'publicaciones' && (!publicaciones || publicaciones.length === 0)
+      .alert.alert-info.shadow-sm.mt-3.p-3
+        i.bi.bi-info-circle-fill.me-2
+        | No se encontraron publicaciones con los criterios seleccionados.
+
+    else if filterType === 'all' && (!usuarios || usuarios.length === 0) && (!publicaciones || publicaciones.length === 0)
+      .alert.alert-warning.shadow-sm.mt-3.p-4.text-center
+        i.bi.bi-exclamation-triangle-fill.fs-3.d-block.mb-2.text-warning
+        h5.fw-bold No se encontraron resultados
+        p.mb-0 No hallamos usuarios ni publicaciones que coincidan con tus criterios. Intentá probando con otras palabras clave o removiendo filtros.

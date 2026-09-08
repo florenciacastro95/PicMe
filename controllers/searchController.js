@@ -21,7 +21,7 @@ exports.index = async (req, res) => {
         let totalResults = 0;
         let totalPages = 0;
 
-        if (filterType === 'all' || filterType === 'usuarios') {
+        if ((filterType === 'all' || filterType === 'usuarios')&& !tagFilter) {
             const whereUsuario = { activo: true };
 
             if (q) {

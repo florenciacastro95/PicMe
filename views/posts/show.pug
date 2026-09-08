@@ -37,41 +37,42 @@ block content
                         value=val
                       )
                         = val
+              hr
+              h6.text-secondary.small 
+                i.bi.bi-chat-dots-fill.me-1
+                | Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
               if publicacion.comentarios_habilitados
-                hr
-                h6.text-secondary.small 
-                  i.bi.bi-chat-dots-fill.me-1
-                  | Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
                 if user
-                  form(action="/comments/" + imagen.id
-                    method="POST")
+                  form(action="/comments/" + imagen.id method="POST")
                     .mb-3
-                      textarea.form-control(name="contenido"
+                      textarea.form-control(
+                        name="contenido"
                         required
-                        maxlength="1000")
-                    button.btn.btn-pink
-                        | Comentar
+                        maxlength="1000"
+                        placeholder="Escribe un comentario..."
+                      )
+                    button.btn.btn-pink Comentar
                 else
-                  p Iniciá sesión para comentar
-
-                if imagen.comentarios && imagen.comentarios.length > 0
-                  each comentario in imagen.comentarios
-                    .card.mb-2.shadow-sm
-                      .card-body.py-2
-                        strong(style="color: var(--pink-dark)")
-                          = comentario.usuario.username
-                        p.mt-2= comentario.contenido
-                        if user && user.id === comentario.usuario_id
-                          form(action="/comments/" + comentario.id + "/delete"
-                            method="POST")
-                            button.btn.btn-sm.btn-danger
-                              i.bi.bi-trash-fill.me-1
-                              | Eliminar
-                else
-                    p.text-muted.small.text-center No hay comentarios aún.
+                  p.text-muted.small Iniciá sesión para comentar
               else
-                  .alert.alert-light.p-1.text-center.small.mb-0
-                  span.text-muted Comentarios cerrados. ACA FALTA IMPLEMENTAR LOS COMENTARIOS YA CREADOS
+                .alert.alert-secondary.p-2.text-center.small.mb-3
+                  i.bi.bi-lock-fill.me-1
+                  | Los comentarios están deshabilitados para esta publicación.
+
+              if imagen.comentarios && imagen.comentarios.length > 0
+                each comentario in imagen.comentarios
+                  .card.mb-2.shadow-sm
+                    .card-body.py-2
+                      strong(style="color: var(--pink-dark)")
+                        = comentario.usuario ? comentario.usuario.username : 'Usuario'
+                      p.mt-2.mb-1= comentario.contenido
+                      if user && user.id === comentario.usuario_id
+                        form(action="/comments/" + comentario.id + "/delete" method="POST")
+                          button.btn.btn-sm.btn-danger
+                            i.bi.bi-trash-fill.me-1
+                            | Eliminar
+              else
+                p.text-muted.small.text-center No hay comentarios aún.
     
   p.mt-4.fs-5= publicacion.descripcion
   if publicacion.tags.length > 0
