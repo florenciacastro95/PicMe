@@ -7,6 +7,7 @@ const Tag = require('./Tag');
 const PublicacionTag = require('./PublicacionTag');
 const Rating = require('./Rating');
 const Seguidor = require('./Seguidor');
+const Denuncia = require('./Denuncia');
 
 Usuario.hasMany(Publicacion, {
     foreignKey: 'usuario_id',
@@ -105,6 +106,53 @@ Seguidor.belongsTo(Usuario, {
     as: 'seguido'
 });
 
+Imagen.hasMany(Denuncia, {
+    foreignKey: 'imagen_id',
+    as: 'denuncias'
+});
+
+Denuncia.belongsTo(Imagen, {
+    foreignKey: 'imagen_id',
+    as: 'imagen'
+});
+
+Comentario.hasMany(Denuncia, {
+    foreignKey: 'comentario_id',
+    as: 'denuncias'
+});
+
+Denuncia.belongsTo(Comentario, {
+    foreignKey: 'comentario_id',
+    as: 'comentario'
+});
+
+Usuario.hasMany(Denuncia, {
+    foreignKey: 'denunciante_id',
+    as: 'denunciasRealizadas'
+});
+
+Denuncia.belongsTo(Usuario, {
+    foreignKey: 'denunciante_id',
+    as: 'denunciante'
+});
+
+Usuario.hasMany(Denuncia, {
+    foreignKey: 'resuelto_por',
+    as: 'denunciasResueltas'
+});
+
+Denuncia.belongsTo(Usuario, {
+    foreignKey: 'resuelto_por',
+    as: 'validador'
+});
+
+
+
+
+
+
+
+
 module.exports = {
     sequelize,
     Usuario,
@@ -114,5 +162,6 @@ module.exports = {
     Tag,
     PublicacionTag,
     Rating,
-    Seguidor
+    Seguidor,
+    Denuncia
 };
