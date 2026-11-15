@@ -24,7 +24,7 @@ const commentRoutes = require('./routes/comments');
 const ratingRoutes = require('./routes/rating');
 const searchRoutes = require('./routes/search');
 const followRoutes = require('./routes/follow');
-
+const reportsRoutes = require('./routes/reports');
 
 const { configVarLocals } = require('./middlewares/auth');
 
@@ -73,7 +73,7 @@ app.use('/comments', commentRoutes);
 app.use('/ratings', ratingRoutes);
 app.use('/search', searchRoutes);
 app.use('/follow', followRoutes);
-
+app.use('/reports', reportsRoutes);
 
 //errores 404500
 app.use((req, res) => {

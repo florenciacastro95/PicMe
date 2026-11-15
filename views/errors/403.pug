@@ -1,0 +1,16 @@
+extends ../layouts/layout
+
+block metadata
+  title Acceso prohibido - PicME!
+
+block content
+  .container.text-center.py-5
+    i.bi.bi-shield-lock.text-warning(style="font-size: 6rem;")
+    
+    h1.mt-4.display-1.fw-bold.text-dark 403
+    h3.text-secondary Acceso prohibido
+    p.text-muted No tenés permisos para acceder a esta sección de PicME! >:C.
+    
+    a.btn.btn-primary.mt-3(href="/")
+      i.bi.bi-house.me-2
+      | Volver al inicio

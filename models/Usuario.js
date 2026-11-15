@@ -47,6 +47,22 @@ const Usuario = sequelize.define('Usuario', {
     activo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true
+    },
+    rol: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: 'usuario',
+        validate: {
+            isIn: [['usuario', 'validador', 'admin']]
+        }
+    },
+    publicaciones_bajadas: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+        validate: {
+            min: 0
+        }
     }
 }, {
     tableName: 'usuarios',

@@ -14,9 +14,9 @@ exports.showLogin = (req, res) => {
 };
 
 exports.showRegister = (req, res) => {
-    res.render('auth/register',{
-            title: 'Registrarse - PicME!'
-        });
+    res.render('auth/register', {
+        title: 'Registrarse - PicME!'
+    });
 };
 
 exports.login = async (req, res) => {
@@ -32,7 +32,7 @@ exports.login = async (req, res) => {
         }
 
         const user = await Usuario.findOne({
-            where: { username:username.trim() }
+            where: { username: username.trim() }
         });
         //usuario non-existance :v
         if (!user) {
@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
         //usaurio inactivo para despues 
         if (!user.activo) {
             req.session.alert = {
-                type: 'warning', 
+                type: 'warning',
                 text: 'Tu cuenta se encuentra inactiva. Comunicate con soporte.'
             };
             return saveRedirect(req, res, '/auth/login');
@@ -57,7 +57,7 @@ exports.login = async (req, res) => {
                 type: 'danger',
                 text: 'Usuario y/o contraseña incorrectos.'
             };
-             return saveRedirect(req, res, '/auth/login');
+            return saveRedirect(req, res, '/auth/login');
         }
 
         req.session.user = {
@@ -65,7 +65,8 @@ exports.login = async (req, res) => {
             username: user.username,
             email: user.email,
             nombre: user.nombre,
-            avatar: user.avatar
+            avatar: user.avatar,
+            rol: user.rol
         };
 
         req.session.alert = {
@@ -81,8 +82,8 @@ exports.login = async (req, res) => {
         req.session.alert = {
             type: 'danger',
             text: 'Hubo un error al iniciar sesión.'
-        }; 
-        
+        };
+
         return saveRedirect(req, res, '/auth/login');
     }
 
@@ -107,7 +108,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
         //usuario >3 caracteres
         if (username.trim().length < 3) {
             req.session.alert = {
@@ -116,7 +117,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             req.session.alert = {
@@ -125,7 +126,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
         //contras que deben coincidir
         if (password !== password_conf) {
             req.session.alert = {
@@ -134,7 +135,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
         //contraseña con al menos 6 caracteres e incluir al menos un número
         const passwordRegex = /^(?=.*\d).{6,}$/;
         if (!passwordRegex.test(password)) {
@@ -144,7 +145,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
 
         //verificar mail existente
         const userEmail = await Usuario.findOne({
@@ -158,7 +159,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
         //verificar usuario existente
         const userUsername = await Usuario.findOne({
             where: { username }
@@ -170,7 +171,7 @@ exports.register = async (req, res) => {
             };
             return saveRedirect(req, res, '/auth/register');
         }
-        
+
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -178,7 +179,9 @@ exports.register = async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            nombre: nombre
+            nombre: nombre,
+            rol: 'usuario', //por defecto empezas siendo usuario
+            publicaciones_bajadas: 0
         });
 
         req.session.alert = {

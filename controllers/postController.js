@@ -1,9 +1,31 @@
-const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating, sequelize } = require('../models');
+const { Publicacion, Usuario, Imagen, Tag, PublicacionTag, Comentario, Rating, Denuncia, sequelize } = require('../models');
 const upload = require('../middlewares/upload');
 const cloudinary = require('cloudinary').v2;
 
 const saveRedirect = (req, res, path) => {
     req.session.save(() => res.redirect(path));
+};
+
+// busca si alguna imagen de la publicación tiene >=1 denuncia pendiente
+const tieneDenunciasPendientes = async (publicacionId) => {
+    const imagenes = await Imagen.findAll({
+        where: {
+            publicacion_id: publicacionId
+        },
+        attributes: ['id']
+    });
+    const idsImagenes = imagenes.map(imagen => imagen.id);
+
+    if (idsImagenes.length === 0) {
+        return false;
+    }
+    const cantidadDenuncias = await Denuncia.count({
+        where: {
+            imagen_id: idsImagenes,
+            estado: 'pendiente'
+        }
+    });
+    return cantidadDenuncias > 0;
 };
 
 exports.showCreate = (req, res) => {
@@ -82,7 +104,8 @@ exports.show = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.user ? req.session.user.id : null;
-        const publicacion = await Publicacion.findOne({where : {id, activo: true},
+        const publicacion = await Publicacion.findOne({
+            where: { id, activo: true },
             include: [{
                 model: Imagen,
                 as: 'imagenes',
@@ -189,10 +212,17 @@ exports.showEdit = async (req, res) => {
             ]
         });
 
-        if (!publicacion) {
+        if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId) {
             return res.redirect('/');
         }
-
+        const bloqueada = await tieneDenunciasPendientes(publicacion.id);
+        if (bloqueada) {
+            req.session.alert = {
+                type: 'warning',
+                text: 'No podés modificar esta publicación porque tiene denuncias pendientes de revisión.'
+            };
+            return saveRedirect(req, res, '/posts/' + id);
+        }
         const tagsString = publicacion.tags.map(t => t.nombre).join(', ');
         res.render('posts/edit', {
             publicacion, tagsString
@@ -229,6 +259,15 @@ exports.update = async (req, res) => {
 
             if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId) {
                 return res.redirect('/');
+            }
+
+            const bloqueada = await tieneDenunciasPendientes(publicacion.id);
+            if (bloqueada) {
+                req.session.alert = {
+                    type: 'warning',
+                    text: 'La publicación no puede modificarse porque tiene denuncias pendientes.'
+                };
+                return saveRedirect(req, res, '/posts/' + id);
             }
 
             await publicacion.update({
@@ -317,8 +356,11 @@ exports.changeComments = async (req, res) => {
 
         const publicacion = await Publicacion.findByPk(id);
 
-        if (!publicacion) return res.redirect('/');
-
+        if (!publicacion || !publicacion.activo || publicacion.usuario_id !== userId) {
+            return res.status(403).send(
+                'No tenés permiso para modificar los comentarios de esta publicación.'
+            );
+        }
         publicacion.comentarios_habilitados = !publicacion.comentarios_habilitados;
         await publicacion.save();
 

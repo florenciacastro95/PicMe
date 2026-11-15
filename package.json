@@ -6,7 +6,8 @@
     "scripts": {
         "start": "node server.js",
         "dev": "nodemon server.js",
-        "db:init": "node sql/sincronizardb.js"
+        "db:init": "node sql/sincronizardb.js",
+        "db:migrate:denuncias": "node sql/migrarDenuncias.js"
     },
     "author": "Flor Castro",
     "license": "ISC",
