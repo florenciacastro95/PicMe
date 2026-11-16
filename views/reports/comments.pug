@@ -1,0 +1,154 @@
+
+extends ../layouts/layout
+
+block metadata
+  title Denuncias de comentarios - PicME!
+
+block content
+
+  .d-flex.justify-content-between.align-items-center.flex-wrap.gap-2.mb-4
+
+    div
+      h2.fw-bold.mb-1
+        i.bi.bi-chat-square-text-fill.me-2
+        | Denuncias de comentarios
+
+      p.text-muted.mb-0
+        | Revisá las denuncias recibidas sobre comentarios de tus publicaciones.
+
+    span.badge.bg-dark.fs-6
+      = casos.length
+      |  comentarios denunciados
+
+  if casos.length === 0
+
+    .card.shadow-sm.border-0
+      .card-body.text-center.py-5
+        i.bi.bi-chat-square-check.text-success(style="font-size: 3rem;")
+
+        h4.mt-3 No tenés denuncias pendientes
+
+        p.text-muted.mb-0
+          | Cuando otro usuario denuncie un comentario de tus publicaciones, podrás revisarlo aquí.
+
+  else
+
+    each caso in casos
+
+      .card.shadow-sm.mb-4
+
+        .card-body
+
+          .row.g-4
+
+            .col-md-3
+
+              img.img-fluid.rounded.w-100(
+                src=caso.imagen.url
+                alt=caso.publicacion.titulo
+                style="max-height: 220px; object-fit: contain;"
+              )
+
+              p.fw-semibold.mt-2.mb-1
+                = caso.publicacion.titulo
+
+              small.text-muted
+                | Publicación ##{caso.publicacion.id}
+
+            .col-md-9
+
+              .d-flex.justify-content-between.flex-wrap.gap-2
+
+                h5.fw-bold
+                  i.bi.bi-chat-dots.me-2
+                  | Comentario denunciado
+
+                span.badge.bg-danger
+                  = caso.denuncias.length
+                  |  denuncias
+
+              // Autor original del comentario
+              p.mb-2
+
+                strong Autor del comentario:
+
+                if caso.comentario.usuario
+
+                  |  @#{caso.comentario.usuario.username}
+
+                  if caso.comentario.usuario.activo === false
+
+                    span.badge.bg-secondary.ms-2
+                      | Cuenta suspendida
+
+                else
+
+                  |  Usuario no disponible
+
+              // Contenido original del comentario
+              blockquote.blockquote.border-start.border-4.ps-3.py-2.bg-light.rounded
+                p.mb-0= caso.comentario.contenido
+
+              hr
+
+              h6.fw-bold Motivos de las denuncias
+
+              // IMPORTANTE:
+              // Cada denuncia debe mostrarse dentro de este each.
+              // Así utilizamos siempre los datos del registro real
+              // recuperado desde PostgreSQL.
+
+              if caso.denuncias && caso.denuncias.length
+
+                each denuncia in caso.denuncias
+
+                  .border.rounded.p-3.mb-2
+
+                    .d-flex.justify-content-between.flex-wrap.gap-2
+
+                      strong
+                        i.bi.bi-person-circle.me-1
+                        = denuncia.denunciante ? '@' + denuncia.denunciante.username : 'Usuario'
+
+                      small.text-muted
+
+                        | Denuncia ##{denuncia.id}
+
+                        if denuncia.created_at
+                          |  - #{new Date(denuncia.created_at).toLocaleString('es-AR')}
+
+                    p.mb-1.mt-2
+
+                      strong Motivo:
+
+                      |  #{motivos[denuncia.motivo] || denuncia.motivo}
+
+                    p.mb-0
+                      strong Justificación:
+
+                    p.mb-0.text-break= denuncia.descripcion
+
+              else
+
+                p.text-muted No hay denuncias pendientes para este comentario.
+
+              // Acción del autor de la publicación
+              .d-flex.flex-wrap.gap-2.mt-3
+
+                if caso.denuncias && caso.denuncias.length
+
+                  form(
+                    action='/reports/comments/' + caso.denuncias[0].id + '/delete'
+                    method='POST'
+                  )
+
+                    button.btn.btn-danger(
+                      type='submit'
+                      onclick="return confirm('¿Querés eliminar este comentario de tu publicación?')"
+                    )
+
+                      i.bi.bi-trash-fill.me-1
+                      | Eliminar comentario
+
+              p.small.text-muted.mt-2.mb-0
+                | Al eliminarlo, el comentario dejará de mostrarse y sus denuncias pendientes quedarán resueltas.

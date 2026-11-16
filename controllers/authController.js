@@ -6,7 +6,17 @@ const saveRedirect = (req, res, path) => {
     req.session.save(() => res.redirect(path));
 };
 
+const renderLoginError = (res, type, text, status = 401, username = '') => {
 
+    return res.status(status).render('auth/login', {
+        title: 'Iniciar sesión - PicME!',
+        alert: {
+            type,
+            text
+        },
+        username
+    });
+};
 exports.showLogin = (req, res) => {
     res.render('auth/login', {
         title: 'Iniciar sesión - PicME!'
@@ -19,46 +29,77 @@ exports.showRegister = (req, res) => {
     });
 };
 
+
 exports.login = async (req, res) => {
+
     try {
-        const { username, password } = req.body;
-        //campos vacios
+
+        const username = (req.body.username || '').trim();
+        const password = req.body.password || '';
+
+        // 1. Validar campos obligatorios.
+
         if (!username || !password) {
-            req.session.alert = {
-                type: 'danger',
-                text: 'Tenés que completar usuario y contraseña.'
-            };
-            return saveRedirect(req, res, '/auth/login');
+
+            return renderLoginError(
+                res,
+                'danger',
+                'Tenés que completar usuario y contraseña.',
+                400,
+                username
+            );
         }
+
+        // 2. Buscar el usuario.
 
         const user = await Usuario.findOne({
-            where: { username: username.trim() }
+            where: { username }
         });
-        //usuario non-existance :v
+
         if (!user) {
-            req.session.alert = {
-                type: 'danger',
-                text: 'Usuario y/o contraseña incorrectos.'
-            };
-            return saveRedirect(req, res, '/auth/login');
+
+            return renderLoginError(
+                res,
+                'danger',
+                'Usuario y/o contraseña incorrectos.',
+                401,
+                username
+            );
         }
 
-        //usaurio inactivo para despues 
-        if (!user.activo) {
-            req.session.alert = {
-                type: 'warning',
-                text: 'Tu cuenta se encuentra inactiva. Comunicate con soporte.'
-            };
-            return saveRedirect(req, res, '/auth/login');
-        }
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        // 3. Comprobar la contraseña ANTES de informar
+        // si la cuenta está suspendida.
+
+        const passwordMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
+
         if (!passwordMatch) {
-            req.session.alert = {
-                type: 'danger',
-                text: 'Usuario y/o contraseña incorrectos.'
-            };
-            return saveRedirect(req, res, '/auth/login');
+
+            return renderLoginError(
+                res,
+                'danger',
+                'Usuario y/o contraseña incorrectos.',
+                401,
+                username
+            );
         }
+
+        // 4. Verificar el estado de la cuenta.
+
+        if (!user.activo) {
+
+            return renderLoginError(
+                res,
+                'warning',
+                'Tu cuenta fue suspendida por incumplimientos de las normas de PicME!. Si considerás que se trata de un error, comunicate con administración.',
+                403,
+                username
+            );
+        }
+
+        // 5. Crear la sesión.
 
         req.session.user = {
             id: user.id,
@@ -66,28 +107,47 @@ exports.login = async (req, res) => {
             email: user.email,
             nombre: user.nombre,
             avatar: user.avatar,
-            rol: user.rol
+            rol: user.rol || 'usuario'
         };
+
+        // 6. Mensaje de bienvenida.
 
         req.session.alert = {
             type: 'success',
             text: `Bienvenido/a, ${user.username}.`
         };
 
-        return saveRedirect(req, res, '/');
+        return req.session.save((error) => {
+
+            if (error) {
+
+                console.error('Error al guardar sesión:', error);
+
+                return res.status(500).render('auth/login', {
+                    title: 'Iniciar sesión - PicME!',
+                    alert: {
+                        type: 'danger',
+                        text: 'No se pudo iniciar la sesión. Intentá nuevamente.'
+                    }
+                });
+            }
+
+            return res.redirect('/');
+        });
 
     } catch (error) {
-        console.error('error en login authController', error);
 
-        req.session.alert = {
-            type: 'danger',
-            text: 'Hubo un error al iniciar sesión.'
-        };
+        console.error('Error en authController.login:', error);
 
-        return saveRedirect(req, res, '/auth/login');
+        return renderLoginError(
+            res,
+            'danger',
+            'Ocurrió un error al intentar iniciar sesión.',
+            500
+        );
     }
-
 };
+
 
 exports.register = async (req, res) => {
     try {

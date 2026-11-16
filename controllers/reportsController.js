@@ -1,7 +1,7 @@
 
 const { Op } = require('sequelize');
 
-const {sequelize,Denuncia,Imagen,Publicacion,Comentario,Usuario} = require('../models');
+const { sequelize, Denuncia, Imagen, Publicacion, Comentario, Usuario } = require('../models');
 
 const MOTIVOS = {
     spam: 'Spam',
@@ -24,11 +24,11 @@ const validateReportBody = (body) => {
         ? body.descripcion.trim()
         : '';
     if (!Object.prototype.hasOwnProperty.call(MOTIVOS, motivo)) {
-        return {error: 'Seleccioná un motivo de denuncia válido.'};
+        return { error: 'Seleccioná un motivo de denuncia válido.' };
     }
 
     if (descripcion.length < 10 || descripcion.length > 1000) {
-        return {error: 'La descripción debe tener entre 10 y 1000 caracteres.'};
+        return { error: 'La descripción debe tener entre 10 y 1000 caracteres.' };
     }
     return { motivo, descripcion };
 };
@@ -41,12 +41,14 @@ exports.createImageReport = async (req, res) => {
     try {
         const imagen = await Imagen.findByPk(req.params.imageId, {
             include: [
-                {model: Publicacion,
-                    as: 'publicacion'}
+                {
+                    model: Publicacion,
+                    as: 'publicacion'
+                }
             ]
         });
 
-        if (!imagen ||!imagen.publicacion ||!imagen.publicacion.activo) {
+        if (!imagen || !imagen.publicacion || !imagen.publicacion.activo) {
             return res.status(404).render('errors/404');
         }
 
@@ -149,7 +151,7 @@ exports.createCommentReport = async (req, res) => {
             }
         );
 
-        if (!comentario ||!comentario.activo ||!comentario.imagen ||!comentario.imagen.publicacion) {
+        if (!comentario || !comentario.activo || !comentario.imagen || !comentario.imagen.publicacion) {
             return res.status(404).render('errors/404');
         }
 
@@ -231,22 +233,27 @@ exports.createCommentReport = async (req, res) => {
 // 3. Validad
 exports.moderationQueue = async (req, res) => {
     try {
-        const denuncias = await Denuncia.findAll({where: {
+        const denuncias = await Denuncia.findAll({
+            where: {
                 estado: 'pendiente',
                 imagen_id: { [Op.ne]: null }
             },
 
             include: [
-                {model: Usuario, as: 'denunciante',
+                {
+                    model: Usuario, as: 'denunciante',
                     attributes: ['id', 'username']
                 },
-                {model: Imagen,
+                {
+                    model: Imagen,
                     as: 'imagen',
                     include: [
-                        {model: Publicacion,
+                        {
+                            model: Publicacion,
                             as: 'publicacion',
                             include: [
-                                {model: Usuario,
+                                {
+                                    model: Usuario,
                                     as: 'usuario',
                                     attributes: ['id', 'username']
                                 }
@@ -264,7 +271,7 @@ exports.moderationQueue = async (req, res) => {
 
         for (const denuncia of denuncias) {
 
-            if (!denuncia.imagen ||!denuncia.imagen.publicacion ||!denuncia.imagen.publicacion.activo) {
+            if (!denuncia.imagen || !denuncia.imagen.publicacion || !denuncia.imagen.publicacion.activo) {
                 continue;
             }
 
@@ -308,11 +315,25 @@ exports.moderationQueue = async (req, res) => {
 
 
 //4. Resolver denuncias con imagenes
+
 exports.resolveImageReports = async (req, res) => {
 
     const { publicationId, imageId } = req.params;
-    const accion = req.body.accion;
+    const accion = req.body?.accion;
+
+    console.log('\n========== MODERACIÓN PICME ==========');
+
+    console.log('POST recibido');
+    console.log('Publicación:', publicationId);
+    console.log('Imagen:', imageId);
+    console.log('Acción:', accion);
+    console.log('Usuario:', req.session?.user?.id);
+    console.log('======================================');
+
     if (!['desestimar', 'baja'].includes(accion)) {
+
+        console.error('ERROR: acción no válida:', accion);
+
         return redirectWithAlert(
             req,
             res,
@@ -323,14 +344,10 @@ exports.resolveImageReports = async (req, res) => {
     }
 
     try {
+
         await sequelize.transaction(async (transaction) => {
-            const imagen = await Imagen.findOne({
-                where: {
-                    id: imageId,
-                    publicacion_id: publicationId
-                },
-                transaction
-            });
+
+            //Buscamos la publicación.
 
             const publicacion = await Publicacion.findByPk(
                 publicationId,
@@ -340,31 +357,69 @@ exports.resolveImageReports = async (req, res) => {
                 }
             );
 
-            if (!imagen || !publicacion || !publicacion.activo) {
+            if (!publicacion || !publicacion.activo) {
                 throw new Error('PUBLICACION_NO_DISPONIBLE');
             }
-            const cantidad = await Denuncia.count({
+
+            // Comprobamos que la imagen pertenezca a la publicación 
+
+            const imagen = await Imagen.findOne({
+                where: {
+                    id: imageId,
+                    publicacion_id: publicationId
+                },
+                transaction
+            });
+
+            if (!imagen) {
+                throw new Error('IMAGEN_NO_ENCONTRADA');
+            }
+
+            //Recuperamos las denuncias pendientes
+            const denunciasPendientes = await Denuncia.findAll({
                 where: {
                     imagen_id: imagen.id,
                     estado: 'pendiente'
                 },
-                distinct: true,
-                col: 'denunciante_id',
+                attributes: [
+                    'id',
+                    'denunciante_id'
+                ],
                 transaction
             });
 
-            if (cantidad < 4) {
+            const denunciantesUnicos = new Set(
+                denunciasPendientes.map(d => d.denunciante_id)
+            );
+
+            console.log(
+                'Denuncias pendientes:',
+                denunciasPendientes.length
+            );
+
+            console.log(
+                'Denunciantes diferentes:',
+                denunciantesUnicos.size
+            );
+
+            //Comprobamos el mínimo exigido
+
+            if (denunciantesUnicos.size < 4) {
                 throw new Error('UMBRAL_NO_ALCANZADO');
             }
 
             const ahora = new Date();
+            const validadorId = req.session.user.id;
 
             if (accion === 'desestimar') {
-                await Denuncia.update(
+
+                console.log('Procesando desestimación...');
+
+                const [actualizadas] = await Denuncia.update(
                     {
                         estado: 'desestimada',
                         resolucion: 'denuncias_desestimadas',
-                        resuelto_por: req.session.user.id,
+                        resuelto_por: validadorId,
                         resuelto_at: ahora
                     },
                     {
@@ -372,19 +427,37 @@ exports.resolveImageReports = async (req, res) => {
                             imagen_id: imagen.id,
                             estado: 'pendiente'
                         },
-                        transaction
+                        transaction,
+                        //No ejecutamos validaciones de instancia incompletasdurante esta actualización masiva
+                        validate: false
                     }
                 );
 
-            } else {
+                console.log(
+                    'Denuncias desestimadas:',
+                    actualizadas
+                );
 
-                //chau publi
+                if (actualizadas === 0) {
+                    throw new Error('NINGUNA_DENUNCIA_ACTUALIZADA');
+                }
+
+            }
+            else {
+
+                console.log('Procesando baja de publicación...');
+
+                // Inactivamos la publicación completa.
                 await publicacion.update(
-                    {activo: false},
+                    {
+                        activo: false
+                    },
                     { transaction }
                 );
 
-                const imagenesDeLaPublicacion = await Imagen.findAll({
+                // Recuperamos todas sus imágenes.
+
+                const imagenes = await Imagen.findAll({
                     where: {
                         publicacion_id: publicacion.id
                     },
@@ -392,27 +465,30 @@ exports.resolveImageReports = async (req, res) => {
                     transaction
                 });
 
-                const idsImagenesPublicacion =
-                    imagenesDeLaPublicacion.map(row => row.id);
+                const idsImagenes = imagenes.map(i => i.id);
 
-                await Denuncia.update(
+                // Resolvemos todas las denuncias pendientes
+                // relacionadas con las imágenes de esta publicación.
+                const [actualizadas] = await Denuncia.update(
                     {
                         estado: 'baja',
                         resolucion: 'publicacion_dada_de_baja',
-                        resuelto_por: req.session.user.id,
+                        resuelto_por: validadorId,
                         resuelto_at: ahora
                     },
                     {
                         where: {
-                            imagen_id: {
-                                [Op.in]: idsImagenesPublicacion
-                            },
+                            imagen_id: idsImagenes,
                             estado: 'pendiente'
                         },
-                        transaction
+                        transaction,
+                        validate: false
                     }
                 );
 
+                console.log('Denuncias resueltas:', actualizadas);
+
+                // Actualizamos el contador del autor.
                 const autor = await Usuario.findByPk(
                     publicacion.usuario_id,
                     {
@@ -421,22 +497,31 @@ exports.resolveImageReports = async (req, res) => {
                     }
                 );
 
-                if (autor) {
-                    const nuevasBajas = autor.publicaciones_bajadas + 1;
-                    await autor.update(
-                        {publicaciones_bajadas: nuevasBajas,
-                            activo: nuevasBajas >= 3
-                                ? false
-                                : autor.activo},
-                        { transaction }
-                    );
+                if (!autor) {
+                    throw new Error('AUTOR_NO_ENCONTRADO');
                 }
+
+                const nuevasBajas =
+                    Number(autor.publicaciones_bajadas || 0) + 1;
+
+                await autor.update(
+                    {
+                        publicaciones_bajadas: nuevasBajas,
+                        activo: nuevasBajas >= 3 ? false : autor.activo
+                    },
+                    { transaction }
+                );
+
+                console.log('Nuevas bajas del autor:', nuevasBajas);
             }
+
         });
 
-        const mensaje = accion === 'baja'
-            ? 'La publicación fue dada de baja. Si el autor alcanzó tres bajas, su cuenta quedó inactiva.'
-            : 'Las denuncias de esta imagen fueron desestimadas. La publicación se podrá editar cuando no queden otras denuncias pendientes.';
+        console.log('TRANSACCIÓN COMPLETADA CORRECTAMENTE');
+
+        const mensaje = accion === 'desestimar'
+            ? 'Las denuncias fueron desestimadas. La publicación vuelve a estar disponible.'
+            : 'La publicación fue dada de baja correctamente.';
 
         return redirectWithAlert(
             req,
@@ -448,60 +533,72 @@ exports.resolveImageReports = async (req, res) => {
 
     } catch (error) {
 
+        console.error(
+            '\nERROR AL RESOLVER DENUNCIA:',
+            error.message
+        );
+
+        console.error(error.stack);
+
+        let mensaje = 'No se pudo resolver el caso.';
+
         if (error.message === 'UMBRAL_NO_ALCANZADO') {
-            return redirectWithAlert(
-                req,
-                res,
-                '/reports/moderation',
-                'warning',
-                'El caso ya no alcanza el mínimo de cuatro denunciantes distintos.'
-            );
+            mensaje = 'El caso ya no alcanza los cuatro denunciantes diferentes.';
         }
 
         if (error.message === 'PUBLICACION_NO_DISPONIBLE') {
-            return redirectWithAlert(
-                req,
-                res,
-                '/reports/moderation',
-                'warning',
-                'La publicación ya no está disponible.'
-            );
+            mensaje = 'La publicación ya no está disponible.';
         }
 
-        console.error('Error al resolver denuncias:', error);
+        if (error.message === 'IMAGEN_NO_ENCONTRADA') {
+            mensaje = 'La imagen no pertenece a esa publicación.';
+        }
+
+        if (error.message === 'NINGUNA_DENUNCIA_ACTUALIZADA') {
+            mensaje = 'No se encontró ninguna denuncia pendiente para resolver.';
+        }
 
         return redirectWithAlert(
             req,
             res,
             '/reports/moderation',
             'danger',
-            'No se pudo resolver el caso.'
+            mensaje
         );
     }
 };
 
+
 exports.commentReports = async (req, res) => {
-    try {const denuncias = await Denuncia.findAll({
+    try {
+        const denuncias = await Denuncia.findAll({
             where: {
                 estado: 'pendiente',
                 comentario_id: { [Op.ne]: null }
             },
             include: [
-                {model: Usuario,
-                 as: 'denunciante',
-                 attributes: ['id', 'username']
+                {
+                    model: Usuario,
+                    as: 'usuario',
+                    attributes: ['id', 'username', 'activo']
                 },
-                {model: Comentario,
+                {
+                    model: Comentario,
                     as: 'comentario',
                     include: [
-                        {model: Usuario,
+                        {
+                            model: Usuario,
                             as: 'usuario',
-                            attributes: ['id', 'username']},
-                        {model: Imagen,
+                            attributes: ['id', 'username']
+                        },
+                        {
+                            model: Imagen,
                             as: 'imagen',
                             include: [
-                                {model: Publicacion,
-                               as: 'publicacion'}
+                                {
+                                    model: Publicacion,
+                                    as: 'publicacion'
+                                }
                             ]
                         }
                     ]
@@ -519,7 +616,7 @@ exports.commentReports = async (req, res) => {
             const publicacion = comentario &&
                 comentario.imagen &&
                 comentario.imagen.publicacion;
-            if (!comentario ||!comentario.activo ||!publicacion ||publicacion.usuario_id !== req.session.user.id) {
+            if (!comentario || !comentario.activo || !publicacion || publicacion.usuario_id !== req.session.user.id) {
                 continue;
             }
 
@@ -556,13 +653,16 @@ exports.deleteReportedComment = async (req, res) => {
             req.params.reportId,
             {
                 include: [
-                    {model: Comentario,
+                    {
+                        model: Comentario,
                         as: 'comentario',
                         include: [
-                            {model: Imagen,
+                            {
+                                model: Imagen,
                                 as: 'imagen',
                                 include: [
-                                    {model: Publicacion,
+                                    {
+                                        model: Publicacion,
                                         as: 'publicacion'
                                     }
                                 ]
@@ -612,7 +712,8 @@ exports.deleteReportedComment = async (req, res) => {
                         comentario_id: comentario.id,
                         estado: 'pendiente'
                     },
-                    transaction
+                    transaction,
+                    validate: false
                 }
             );
         });
