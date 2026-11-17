@@ -90,7 +90,7 @@ const Denuncia = sequelize.define('Denuncia', {
     updatedAt: 'updated_at',
 
     indexes: [
-//porque no se puede denunciar 2 veces
+        //porque no se puede denunciar 2 veces
         {
             name: 'uq_denuncia_imagen_usuario',
             unique: true,
@@ -113,8 +113,21 @@ const Denuncia = sequelize.define('Denuncia', {
     ],
 
     //cada denuncia corresponde a 1 solo elemento, o es denuncia x imagen o es denuncia x comentario
+
     validate: {
+
+        //ver que la denuncia correspondaa una imagen O a un comentario.
         unSoloElementoDenunciado() {
+
+            //iestamos actualizando solamente otros campos, como estado, resolución o fecha, no necesitamos
+            //volver a validar los identificadores
+            if (
+                !this.isNewRecord &&
+                !this.changed('imagen_id') &&
+                !this.changed('comentario_id')
+            ) {
+                return;
+            }
             const tieneImagen =
                 this.imagen_id !== null &&
                 this.imagen_id !== undefined;
@@ -123,17 +136,14 @@ const Denuncia = sequelize.define('Denuncia', {
                 this.comentario_id !== null &&
                 this.comentario_id !== undefined;
 
+            //febe existir exactamente uno de los dos
             if (tieneImagen === tieneComentario) {
-
                 throw new Error(
                     'La denuncia debe corresponder a una imagen o a un comentario, pero no a ambos.'
                 );
-
             }
         }
-
     }
-
 });
 Denuncia.MOTIVOS = MOTIVOS_DENUNCIA;
 module.exports = Denuncia;

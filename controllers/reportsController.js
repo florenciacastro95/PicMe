@@ -230,7 +230,7 @@ exports.createCommentReport = async (req, res) => {
         );
     }
 };
-// 3. Validad
+
 exports.moderationQueue = async (req, res) => {
     try {
         const denuncias = await Denuncia.findAll({
@@ -312,9 +312,6 @@ exports.moderationQueue = async (req, res) => {
         return res.status(500).render('errors/500');
     }
 };
-
-
-//4. Resolver denuncias con imagenes
 
 exports.resolveImageReports = async (req, res) => {
 
@@ -579,7 +576,7 @@ exports.commentReports = async (req, res) => {
             include: [
                 {
                     model: Usuario,
-                    as: 'usuario',
+                    as: 'denunciante',
                     attributes: ['id', 'username', 'activo']
                 },
                 {
@@ -589,7 +586,7 @@ exports.commentReports = async (req, res) => {
                         {
                             model: Usuario,
                             as: 'usuario',
-                            attributes: ['id', 'username']
+                            attributes: ['id', 'username', 'activo']
                         },
                         {
                             model: Imagen,

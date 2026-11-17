@@ -67,7 +67,6 @@ block content
                   = caso.denuncias.length
                   |  denuncias
 
-              // Autor original del comentario
               p.mb-2
 
                 strong Autor del comentario:
@@ -85,18 +84,12 @@ block content
 
                   |  Usuario no disponible
 
-              // Contenido original del comentario
               blockquote.blockquote.border-start.border-4.ps-3.py-2.bg-light.rounded
                 p.mb-0= caso.comentario.contenido
 
               hr
 
               h6.fw-bold Motivos de las denuncias
-
-              // IMPORTANTE:
-              // Cada denuncia debe mostrarse dentro de este each.
-              // Así utilizamos siempre los datos del registro real
-              // recuperado desde PostgreSQL.
 
               if caso.denuncias && caso.denuncias.length
 
@@ -132,7 +125,6 @@ block content
 
                 p.text-muted No hay denuncias pendientes para este comentario.
 
-              // Acción del autor de la publicación
               .d-flex.flex-wrap.gap-2.mt-3
 
                 if caso.denuncias && caso.denuncias.length

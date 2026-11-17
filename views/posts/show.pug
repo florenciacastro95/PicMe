@@ -1,117 +1,349 @@
+
 extends ../layouts/layout
 
 block content
+
   .mb-3
-    a.btn.btn-outline-secondary(href="/") ⬅ Volver al Inicio
+    a.btn.btn-outline-secondary(href="/")
+      i.bi.bi-arrow-left.me-1
+      | Volver al inicio
+
   h2.mb-3.fw-bold= publicacion.titulo
-  
+
+  // Información del propietario
+  .d-flex.align-items-center.gap-2.mb-3
+
+    i.bi.bi-person-circle.fs-4
+
+    a.fw-semibold(
+      href="/profile/" + publicacion.usuario.username
+    )= publicacion.usuario.username
+
+  // Acceso del autor a las denuncias de comentarios
+  if isOwner
+
+    a.btn.btn-outline-danger.btn-sm.mb-3(
+      href="/reports/comments"
+    )
+      i.bi.bi-flag-fill.me-1
+      | Revisar denuncias de comentarios
+
+  // Aviso de bloqueo por denuncias pendientes
+  if isOwner && bloqueadaPorDenuncias
+
+    .alert.alert-warning
+
+      i.bi.bi-lock-fill.me-2
+
+      strong Publicación bloqueada.
+
+      |  Una o más imágenes recibieron denuncias pendientes de revisión. No podés modificar la publicación hasta que sean resueltas.
+
+  // Imágenes de la publicación
   if publicacion.imagenes.length > 0
+
     .row.g-4
+
       each imagen in publicacion.imagenes
+
         .col-md-6.col-lg-4
-          .card.publicacion-card.shadow-sm
+
+          .card.publicacion-card.shadow-sm.h-100
+
             img.card-img-top.publicacion-img(
               src=imagen.url
               alt=publicacion.titulo
             )
+
             .card-body
+
+              // VALORACIONES
               .small.mb-2
+
                 .d-flex.align-items-center.gap-3
+
                   span
                     i.bi.bi-award-fill.me-1
                     = imagen.promedio || '0.0'
+
                   span.text-muted
                     = imagen.totalVotos || 0
                     |  votos
+
                 .progress.mt-1(style="height:6px")
+
                   .progress-bar(
                     style=`width:${((imagen.promedio || 0)/5)*100}%; background-color: var(--pink-dark, #ff65a3) !important;`
                   )
+
               if user && user.id !== publicacion.usuario_id
-                form.d-flex.align-items-center(action="/ratings/imagen/" + imagen.id method="POST")
+
+                form.d-flex.align-items-center(
+                  action="/ratings/imagen/" + imagen.id
+                  method="POST"
+                )
+
                   .btn-group.w-100
+
                     each val in [1,2,3,4,5]
-                      button.btn.btn-outline-primary(
+
+                      button.btn(
                         type="submit"
                         name="puntuacion"
                         value=val
+                        class=(imagen.miValoracion == val ? "btn-primary" : "btn-outline-primary")
                       )
                         = val
+
+              // DENUNCIAS DE IMÁGENES
+              if user && user.id !== publicacion.usuario_id
+
+                hr
+
+                if imagen.denunciadaPorMi
+
+                  p.small.text-muted.mb-2
+                    i.bi.bi-check-circle-fill.text-success.me-1
+                    | Ya denunciaste esta imagen.
+
+                else
+
+                  details
+
+                    summary.text-danger.small.fw-semibold(style="cursor:pointer")
+                      i.bi.bi-flag-fill.me-1
+                      | Denunciar imagen
+
+                    form.mt-3(
+                      action="/reports/images/" + imagen.id
+                      method="POST"
+                    )
+
+                      .mb-2
+
+                        label.form-label.small Motivo de denuncia
+
+                        select.form-select.form-select-sm(
+                          name="motivo"
+                          required
+                        )
+
+                          option(value="" disabled selected)
+                            | Seleccioná un motivo
+
+                          option(value="spam") Spam o publicidad no solicitada
+
+                          option(value="contenido_inapropiado") Contenido inapropiado
+
+                          option(value="derechos_autor") Derechos de autor
+
+                          option(value="acoso") Acoso o contenido ofensivo
+
+                          option(value="otro") Otro
+
+                      .mb-2
+
+                        label.form-label.small Justificación
+
+                        textarea.form-control.form-control-sm(
+                          name="descripcion"
+                          required
+                          minlength="10"
+                          maxlength="1000"
+                          rows="3"
+                          placeholder="Explicá por qué denunciás esta imagen..."
+                        )
+
+                      button.btn.btn-sm.btn-outline-danger(
+                        type="submit"
+                      )
+                        i.bi.bi-send.me-1
+                        | Enviar denuncia
+
               hr
-              h6.text-secondary.small 
+
+              // COMENTARIOS
+              h6.text-secondary.small
+
                 i.bi.bi-chat-dots-fill.me-1
+
                 | Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
+
               if publicacion.comentarios_habilitados
+
                 if user
-                  form(action="/comments/" + imagen.id method="POST")
+
+                  form(
+                    action="/comments/" + imagen.id
+                    method="POST"
+                  )
+
                     .mb-3
+
                       textarea.form-control(
                         name="contenido"
                         required
                         maxlength="1000"
-                        placeholder="Escribe un comentario..."
+                        placeholder="Escribí un comentario..."
                       )
-                    button.btn.btn-pink Comentar
+
+                    button.btn.btn-pink(type="submit")
+                      i.bi.bi-chat-fill.me-1
+                      | Comentar
+
                 else
-                  p.text-muted.small Iniciá sesión para comentar
+
+                  p.text-muted.small Iniciá sesión para comentar.
+
               else
+
                 .alert.alert-secondary.p-2.text-center.small.mb-3
+
                   i.bi.bi-lock-fill.me-1
+
                   | Los comentarios están deshabilitados para esta publicación.
 
+              // LISTADO DE COMENTARIOS
               if imagen.comentarios && imagen.comentarios.length > 0
+
                 each comentario in imagen.comentarios
+
                   .card.mb-2.shadow-sm
+
                     .card-body.py-2
                       strong(style="color: var(--pink-dark)")
-                        = comentario.usuario ? comentario.usuario.username : 'Usuario'
+                        if comentario.usuario
+
+                          = comentario.usuario.username
+
+                          if comentario.usuario.activo === false
+                            span.badge.bg-secondary.ms-2
+                              | Cuenta suspendida
+                        else
+                          | Usuario eliminado
                       p.mt-2.mb-1= comentario.contenido
+
+                      // El autor del comentario puede eliminarlo
                       if user && user.id === comentario.usuario_id
-                        form(action="/comments/" + comentario.id + "/delete" method="POST")
-                          button.btn.btn-sm.btn-danger
+
+                        form(
+                          action="/comments/" + comentario.id + "/delete"
+                          method="POST"
+                        )
+
+                          button.btn.btn-sm.btn-danger(type="submit")
                             i.bi.bi-trash-fill.me-1
                             | Eliminar
+
+                      // Denunciar comentarios ajenos
+                      if user && !isOwner && user.id !== comentario.usuario_id && comentario.usuario_id !== publicacion.usuario_id
+
+                        details.mt-2
+
+                          summary.text-danger.small(style="cursor:pointer")
+                            i.bi.bi-flag-fill.me-1
+                            | Denunciar comentario
+
+                          form.mt-2(
+                            action="/reports/comments/" + comentario.id
+                            method="POST"
+                          )
+
+                            .mb-2
+
+                              select.form-select.form-select-sm(
+                                name="motivo"
+                                required
+                              )
+
+                                option(value="" disabled selected)
+                                  | Seleccioná un motivo
+
+                                option(value="spam") Spam o publicidad no solicitada
+
+                                option(value="contenido_inapropiado") Contenido inapropiado
+
+                                option(value="derechos_autor") Derechos de autor
+
+                                option(value="acoso") Acoso o contenido ofensivo
+
+                                option(value="otro") Otro
+
+                            textarea.form-control.form-control-sm.mb-2(
+                              name="descripcion"
+                              required
+                              minlength="10"
+                              maxlength="1000"
+                              rows="2"
+                              placeholder="Justificá la denuncia..."
+                            )
+
+                            button.btn.btn-sm.btn-outline-danger(type="submit")
+                              | Enviar denuncia
+
               else
-                p.text-muted.small.text-center No hay comentarios aún.
-    
-  p.mt-4.fs-5= publicacion.descripcion
-  if publicacion.tags.length > 0
-    div.mt-4
+
+                p.text-muted.small.text-center No hay comentarios todavía.
+
+  else
+
+    .alert.alert-light
+      | Esta publicación no tiene imágenes disponibles.
+
+  // DESCRIPCIÓN
+  if publicacion.descripcion
+
+    p.mt-4.fs-5= publicacion.descripcion
+
+  // ETIQUETAS
+  if publicacion.tags && publicacion.tags.length > 0
+
+    .mt-4
+
       strong
         i.bi.bi-tags-fill.me-1
-        | Tags:
-      br
-      each tag in publicacion.tags
-        a.post-tag(
-          href="/search?q=" + tag.nombre
-        )
-          | ##{tag.nombre}
-      hr.my-3
-      p
-        strong
-          i.bi.bi-person-fill.me-1
-          | Autor:
-        a.ms-1(
-          href="/profile/" + publicacion.usuario.username
-        )=publicacion.usuario.username
-    if user && user.id == publicacion.usuario_id
-      .d-flex.gap-2.mt-3.post-actions
-        a.btn.btn-edit(href="/posts/" + publicacion.id + "/edit")
-          i.bi.bi-pencil-fill.me-1
-          | Editar
+        | Etiquetas:
 
-        form(action="/posts/" + publicacion.id + "/delete"
-          method="POST")
-          button.btn.btn-delete.btn-danger
-            i.bi.bi-trash-fill.me-1
-            | Eliminar
-        form(action="/posts/" + publicacion.id + "/habcomments"
-          method="POST")
-          if publicacion.comentarios_habilitados
-            button.btn.btn-comments
-              i.bi.bi-lock-fill.me-1
-              | Deshabilitar comentarios
-          else
-            button.btn.btn-success
-              i.bi.bi-unlock-fill.me-1
-              | Habilitar comentarios
+      br
+
+      each tag in publicacion.tags
+
+        a.post-tag(href="/search?q=" + tag.nombre)
+          | ##{tag.nombre}
+
+  // ACCIONES DEL AUTOR
+  if isOwner && !bloqueadaPorDenuncias
+
+    .d-flex.gap-2.mt-4.flex-wrap.post-actions
+
+      a.btn.btn-edit(
+        href="/posts/" + publicacion.id + "/edit"
+      )
+        i.bi.bi-pencil-fill.me-1
+        | Editar publicación
+
+      form(
+        action="/posts/" + publicacion.id + "/delete"
+        method="POST"
+      )
+
+        button.btn.btn-delete.btn-danger(type="submit")
+          i.bi.bi-trash-fill.me-1
+          | Eliminar publicación
+
+      form(
+        action="/posts/" + publicacion.id + "/habcomments"
+        method="POST"
+      )
+
+        if publicacion.comentarios_habilitados
+
+          button.btn.btn-comments(type="submit")
+            i.bi.bi-lock-fill.me-1
+            | Deshabilitar comentarios
+
+        else
+
+          button.btn.btn-success(type="submit")
+            i.bi.bi-unlock-fill.me-1
+            | Habilitar comentarios

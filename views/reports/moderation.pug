@@ -1,0 +1,128 @@
+
+extends ../layouts/layout
+
+block metadata
+  title Moderación de contenido - PicME!
+
+block content
+
+  .d-flex.justify-content-between.align-items-center.flex-wrap.gap-3.mb-4
+    div
+      h2.fw-bold.mb-1
+        i.bi.bi-shield-check.me-2
+        | Moderación de contenido
+      p.text-muted.mb-0
+        | Revisá las imágenes que alcanzaron el mínimo de cuatro denunciantes diferentes.
+
+    span.badge.bg-dark.fs-6
+      = casos.length
+      |  casos pendientes
+
+  .alert.alert-info
+    i.bi.bi-info-circle-fill.me-2
+    | Como validador podés desestimar las denuncias o dar de baja la publicación completa.
+
+  if casos.length === 0
+
+    .card.shadow-sm.border-0
+      .card-body.text-center.py-5
+        i.bi.bi-shield-check.text-success(style="font-size: 3rem;")
+        h4.mt-3 No hay casos pendientes
+        p.text-muted.mb-0
+          | Cuando una imagen reciba denuncias de al menos cuatro usuarios diferentes, aparecerá aquí.
+
+  else
+
+    each caso in casos
+
+      .card.shadow-sm.mb-4
+        .card-body
+
+          .row.g-4
+
+            .col-lg-4
+
+              img.img-fluid.rounded.shadow-sm.w-100(
+                src=caso.imagen.url
+                alt=caso.publicacion.titulo
+                style="max-height: 320px; object-fit: contain;"
+              )
+
+              .mt-3
+                h5.fw-bold= caso.publicacion.titulo
+
+                p.mb-1
+                  strong Publicación:
+                  |  ##{caso.publicacion.id}
+
+                p.mb-1
+                  strong Imagen:
+                  |  ##{caso.imagen.id}
+
+                p.mb-1
+                  strong Autor:
+                  |  @#{caso.publicacion.usuario ? caso.publicacion.usuario.username : 'Desconocido'}
+
+                .mt-3
+                  span.badge.bg-danger.fs-6
+                    = caso.cantidadDenunciantes
+                    |  denunciantes diferentes
+
+            .col-lg-8
+
+              h5.fw-semibold.mb-3
+                i.bi.bi-flag-fill.text-danger.me-2
+                | Denuncias recibidas
+
+              each denuncia in caso.denuncias
+
+                .border.rounded.p-3.mb-3
+
+                  .d-flex.justify-content-between.flex-wrap.gap-2
+
+                    strong
+                      i.bi.bi-person-circle.me-1
+                      = denuncia.denunciante ? '@' + denuncia.denunciante.username : 'Usuario'
+
+                    small.text-muted
+                      = denuncia.created_at ? new Date(denuncia.created_at).toLocaleString('es-AR') : ''
+
+                  p.mb-1.mt-2
+                    strong Motivo:
+                    |  #{motivos[denuncia.motivo] || denuncia.motivo}
+
+                  p.mb-0
+                    strong Justificación:
+                  p.mb-0.text-break= denuncia.descripcion
+
+              hr
+
+              h6.fw-bold ¿Qué decisión querés tomar?
+
+              .d-flex.flex-wrap.gap-2
+
+                form(
+                  action='/reports/moderation/' + caso.publicacion.id + '/images/' + caso.imagen.id + '/resolve'
+                  method='POST'
+                )
+                  button.btn.btn-outline-success(
+                    type='submit'
+                    name='accion'
+                    value='desestimar'
+                    onclick="return confirm('¿Confirmás que querés desestimar todas las denuncias pendientes de esta imagen?')"
+                  )
+                    i.bi.bi-check-circle.me-1
+                    | Desestimar denuncias
+
+                form(
+                  action='/reports/moderation/' + caso.publicacion.id + '/images/' + caso.imagen.id + '/resolve'
+                  method='POST'
+                )
+                  button.btn.btn-danger(
+                    type='submit'
+                    name='accion'
+                    value='baja'
+                    onclick="return confirm('¿Confirmás la baja de toda la publicación? Esta acción cuenta como una baja para el autor.')"
+                  )
+                    i.bi.bi-trash-fill.me-1
+                    | Dar de baja publicación

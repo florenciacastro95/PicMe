@@ -57,4 +57,17 @@ router.post(
     reportsController.resolveImageReports
 );
 
+// TEMPORAL: ruta para comprobar los permisos del validador.
+// Eliminar después de completar las pruebas.
+
+router.get(
+    '/_test-validator',
+    isAuthenticated,
+    isValidator,
+    (req, res) => {
+        res.status(200).send(
+            `Acceso autorizado. Rol: ${req.currentUser.rol}`
+        );
+    }
+);
 module.exports = router;

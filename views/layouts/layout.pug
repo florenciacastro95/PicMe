@@ -49,6 +49,15 @@ html(lang="es")
             if user
               li.nav-item.me-lg-2
                 a.nav-link(href="/profile/" + user.username) Mi perfil
+              li.nav-item.me-lg-2
+                a.nav-link(href="/reports/comments")
+                  i.bi.bi-flag.me-1
+                  | Denuncias
+              if user.rol === 'validador' || user.rol === 'admin'
+                li.nav-item.me-lg-2
+                  a.nav-link(href="/reports/moderation")
+                    i.bi.bi-shield-check.me-1
+                    | Moderación
               li.nav-item
                 form(action="/auth/logout" method="POST" class="d-inline")
                   button.btn.btn-link.nav-link(type="submit") Cerrar sesión

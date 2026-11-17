@@ -119,11 +119,13 @@ exports.show = async (req, res) => {
                     {
                         model: Comentario,
                         as: 'comentarios',
+                        where: { activo: true },
+                        required: false,
                         include: [
                             {
                                 model: Usuario,
                                 as: 'usuario',
-                                attributes: ['id', 'username', 'avatar']
+                                attributes: ['id', 'username', 'avatar', 'activo']
                             }]
                     }, {
                         model: Rating,
@@ -159,6 +161,24 @@ exports.show = async (req, res) => {
             req.session.alert = { type: 'danger', text: 'Publicación no encontrada.' };
             return saveRedirect(req, res, '/');
         }
+
+        //ver la publicación está bloqueada por denuncias
+        const idsTodasLasImagenes = publicacion.imagenes.map(
+            img => img.id
+        );
+
+        const denunciasPendientesPublicacion = idsTodasLasImagenes.length
+            ? await Denuncia.count({
+                where: {
+                    imagen_id: idsTodasLasImagenes,
+                    estado: 'pendiente'
+                }
+            })
+            : 0;
+
+        const bloqueadaPorDenuncias =
+            denunciasPendientesPublicacion > 0;
+
         let imagenesFiltradas = publicacion.imagenes;
         if (!userId) {
             imagenesFiltradas = publicacion.imagenes.filter(img => img.copyright === 'sin_copyright');
@@ -176,13 +196,30 @@ exports.show = async (req, res) => {
                 }
             });
         }
+        // el usuario ya denunció cada imagen?
+        let misDenuncias = [];
+        if (userId && imagenesFiltradas.length > 0) {
+            misDenuncias = await Denuncia.findAll({
+                where: {
+                    denunciante_id: userId,
+                    imagen_id: imagenesFiltradas.map(img => img.id)
+                },
+                attributes: ['imagen_id']
+            });
+        }
+        const imagenesDenunciadasPorMi = new Set(
+            misDenuncias.map(d => d.imagen_id)
+        );
+
         const imagenesConStats = imagenesFiltradas.map(img => {
             const votoUsuario = misVotos.find(v => v.imagen_id === img.id);
             return {
                 ...img.toJSON(),
                 promedio: parseFloat(img.get('promedioRating')).toFixed(1),
                 totalVotos: parseInt(img.get('totalVotos')),
-                miValoracion: votoUsuario ? votoUsuario.puntuacion : null
+                miValoracion: votoUsuario ? votoUsuario.puntuacion : null,
+                //la imagen fue denunciada por el usuario actual? marcarla si es asi
+                denunciadaPorMi: imagenesDenunciadasPorMi.has(img.id)
             };
         });
 
@@ -192,7 +229,8 @@ exports.show = async (req, res) => {
                 ...publicacion.toJSON(),
                 imagenes: imagenesConStats
             },
-            isOwner
+            isOwner,
+            bloqueadaPorDenuncias
         });
 
     } catch (error) {
