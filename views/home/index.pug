@@ -2,73 +2,162 @@ extends ../layouts/layout
 
 block metadata
   title Inicio - PicME!
+  meta(
+    name="description"
+    content="Compartí tus fotografías, descubrí nuevas miradas y conectá con una comunidad única y detergente. En PicME! celebramos la creatividad y la sororidad."
+  )
+
 block content
-  .container
-    .text-center.mb-4
-      h1.title 
-        i.bi.bi-camera-fill.me-2
-        | PicME!
+  section.home-intro(aria-labelledby="home-title")
+    .home-intro-copy
+      span.home-intro-kicker
+        | La comunidad fotográfica más humilde*
+
+      h1.title#home-title PicME!
+
+      p.home-intro-tagline
+        | Únicas, irrepetibles y detergentes.
+
+      p.home-intro-disclaimer
+        | La humildad está en revisión. La sororidad no se negocia.
+    .home-intro-actions
       if user
-        a.btn.btn-pink.mb-4(href="/posts/create")
-          | Nueva publicación
-    .row.justify-content-center
-        each pub in publicaciones
-          .col-md-6.col-lg-4.mb-4
-            .card.h-100.shadow
-              if pub.imagenes && pub.imagenes.length > 0
-                img.card-img-top(
+        a.btn.btn-pink(href="/posts/create")
+          i.ti.ti-plus.me-1(aria-hidden="true")
+          | Publicar mi obra maestra
+      else
+        a.btn.btn-pink(href="/auth/register")
+          | Quiero ser única y detergente
+
+    .home-intro-visuals(aria-hidden="true")
+      .home-sticker-frame.home-sticker-frame-two
+        img.home-sticker-image(
+          src="/assets/branding/picme-sticker-02.png"
+          alt=""
+        )
+      .home-sticker-frame.home-sticker-frame-one
+        img.home-sticker-image(
+          src="/assets/branding/picme-sticker-01.png"
+          alt=""
+        )
+
+  if publicaciones && publicaciones.length > 0
+
+    section.masonry-grid(aria-label="Publicaciones recientes")
+
+      each pub in publicaciones
+        article.masonry-item
+          .photo-card
+
+            if pub.imagenes && pub.imagenes.length > 0
+              a.photo-card-image-link(
+                href="/posts/" + pub.id
+                aria-label="Ver publicación: " + pub.titulo
+              )
+                img.photo-card-image(
                   src=pub.imagenes[0].url
                   alt=pub.titulo
-                  style="height:220px;object-fit:cover;"
+                  loading="lazy"
                 )
-              .card-body.d-flex.flex-column
-                h5.card-title.mb-3
-                  a.text-decoration-none(href="/posts/" + pub.id)
-                    = pub.titulo
-                if pub.descripcion
-                  p.card-text.flex-grow-1.small
-                    = pub.descripcion
-                .mt-auto.pt-2.small.text-muted.mb-2
-                  .small.text-muted.mb-2
-                    span.me-3
-                      i.bi.bi-images.me-1
-                      = pub.totalImagenes
-                    span.me-3
-                      if pub.promedioValoracion
-                        = pub.promedioValoracion
-                      else
-                        | Sin votos
-                    if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes.length > 0 && pub.imagenes[0].copyright === 'copyright')
-                      span.text-warning
-                        i.bi.bi-c-circle.me-1
-                        | Copyright
-                    else
-                      span.text-success
-                        i.bi.bi-globe.me-1
-                        | Libre
-                    small.text-muted.d-block.pt-2
-                      | Por 
-                      a(href="/profile/" + pub.usuario.username)= pub.usuario.username
-    if totalPages > 1
-        nav.mt-4(aria-label="Navegación de páginas")
-          ul.pagination.justify-content-center
-            if hasPrevPage
-              li.page-item
-                a.page-link(href=`/?page=${currentPage - 1}`) Anterior
             else
-              li.page-item.disabled
-                span.page-link Anterior
-            - for (let i = 1; i <= totalPages; i++)
-              if i === currentPage
-                li.page-item.active(aria-current="page")
-                  span.page-link= i
-              else
-                li.page-item
-                  a.page-link(href=`/?page=${i}`)= i
+              a.photo-card-image-link(
+                href="/posts/" + pub.id
+                aria-label="Ver publicación: " + pub.titulo
+              )
+                .photo-card-placeholder
+                  i.ti.ti-photo(aria-hidden="true")
 
-            if hasNextPage
-              li.page-item
-                a.page-link(href=`/?page=${currentPage + 1}`) Siguiente
+            .photo-card-body
+
+              h2.photo-card-title
+                a(href="/posts/" + pub.id)= pub.titulo
+
+              if pub.descripcion
+                p.photo-card-description= pub.descripcion
+
+              .photo-card-meta
+
+                span
+                  i.ti.ti-photo(aria-hidden="true")
+                  = pub.totalImagenes
+
+                span
+                  i.ti.ti-star(aria-hidden="true")
+                  if pub.promedioValoracion
+                    = pub.promedioValoracion
+                    |  / 5
+                  else
+                    | Sin votos
+
+                if pub.copyright === 'copyright' || (pub.imagenes && pub.imagenes.length > 0 && pub.imagenes[0].copyright === 'copyright')
+                  span.text-warning
+                    i.ti.ti-copyright(aria-hidden="true")
+                    | Con copyright
+                else
+                  span.text-success
+                    i.ti.ti-world(aria-hidden="true")
+                    | Libre
+
+              .photo-card-author
+                if pub.usuario.avatar
+                  img.avatar-small(
+                    src=pub.usuario.avatar
+                    alt=""
+                    loading="lazy"
+                  )
+                else
+                  span.avatar-small
+                    = (pub.usuario.username || 'U').charAt(0).toUpperCase()
+
+                a(href="/profile/" + pub.usuario.username)
+                  = pub.usuario.username
+
+    if totalPages > 1
+      nav.mt-4(aria-label="Navegación de páginas")
+        ul.pagination.justify-content-center
+
+          if hasPrevPage
+            li.page-item
+              a.page-link(
+                href=`/?page=${currentPage - 1}`
+                aria-label="Página anterior"
+              )
+                i.ti.ti-chevron-left(aria-hidden="true")
+          else
+            li.page-item.disabled
+              span.page-link
+                i.ti.ti-chevron-left(aria-hidden="true")
+
+          - for (let i = 1; i <= totalPages; i++)
+            if i === currentPage
+              li.page-item.active(aria-current="page")
+                span.page-link= i
             else
-              li.page-item.disabled
-                span.page-link Siguiente
+              li.page-item
+                a.page-link(href=`/?page=${i}`)= i
+
+          if hasNextPage
+            li.page-item
+              a.page-link(
+                href=`/?page=${currentPage + 1}`
+                aria-label="Página siguiente"
+              )
+                i.ti.ti-chevron-right(aria-hidden="true")
+          else
+            li.page-item.disabled
+              span.page-link
+                i.ti.ti-chevron-right(aria-hidden="true")
+
+  else
+    .empty-state.text-center.py-5
+      i.ti.ti-camera-off(aria-hidden="true")
+
+      h2.mt-3
+        | Todavía no hay publicaciones
+
+      p.text-muted
+        | Qué raro, todavía nadie vino a compartir su talento.
+
+      if user
+        a.btn.btn-pink.mt-2(href="/posts/create")
+          | Publicar mi primera obra maestra

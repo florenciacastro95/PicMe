@@ -1,349 +1,387 @@
-
 extends ../layouts/layout
 
+block metadata
+  title= publicacion.titulo + ' - PicME!'
+  meta(
+    name="description"
+    content="Descubrí esta publicación y compartí tu opinión en PicME!"
+  )
+
 block content
+  .post-page
 
-  .mb-3
-    a.btn.btn-outline-secondary(href="/")
-      i.bi.bi-arrow-left.me-1
-      | Volver al inicio
+    //- Navegación
+    .post-navigation
+      a.post-back-link(href="/")
+        i.ti.ti-arrow-left(aria-hidden="true")
+        | Volver al inicio
 
-  h2.mb-3.fw-bold= publicacion.titulo
+    //- Encabezado de la publicación
+    header.post-header-panel
 
-  // Información del propietario
-  .d-flex.align-items-center.gap-2.mb-3
+      span.post-eyebrow
+        | UNA PUBLICACIÓN ÚNICA Y DETERGENTE
 
-    i.bi.bi-person-circle.fs-4
+      h1.post-title= publicacion.titulo
 
-    a.fw-semibold(
-      href="/profile/" + publicacion.usuario.username
-    )= publicacion.usuario.username
+      if publicacion.descripcion
+        p.post-description= publicacion.descripcion
 
-  // Acceso del autor a las denuncias de comentarios
-  if isOwner
+      .post-author
+        if publicacion.usuario.avatar
+          img.post-author-avatar(
+            src=publicacion.usuario.avatar
+            alt=""
+          )
+        else
+          span.post-author-avatar.post-avatar-fallback
+            = (publicacion.usuario.username || 'U').charAt(0).toUpperCase()
 
-    a.btn.btn-outline-danger.btn-sm.mb-3(
-      href="/reports/comments"
-    )
-      i.bi.bi-flag-fill.me-1
-      | Revisar denuncias de comentarios
+        .post-author-info
+          span.post-author-label Compartida por
+          a.post-author-name(href="/profile/" + publicacion.usuario.username)
+            = publicacion.usuario.nombre || publicacion.usuario.username
+          span.post-author-username= '@' + publicacion.usuario.username
 
-  // Aviso de bloqueo por denuncias pendientes
-  if isOwner && bloqueadaPorDenuncias
+      if isOwner
+        a.post-report-management(href="/reports/comments")
+          i.ti.ti-flag(aria-hidden="true")
+          | Revisar denuncias de comentarios
 
-    .alert.alert-warning
+      if isOwner && bloqueadaPorDenuncias
+        .post-warning
+          i.ti.ti-lock(aria-hidden="true")
+          .post-warning-text
+            strong Publicación bloqueada.
+            |  Una o más imágenes recibieron denuncias pendientes de revisión. No podés modificar la publicación hasta que sean resueltas.
 
-      i.bi.bi-lock-fill.me-2
+    //- Galería de fotografías
+    if publicacion.imagenes && publicacion.imagenes.length > 0
 
-      strong Publicación bloqueada.
+      .post-gallery-heading
+        div
+          span.post-section-kicker NUESTRA PEQUEÑA EXPOSICIÓN
+          h2 Fotografías
+        span.post-image-total
+          i.ti.ti-photo(aria-hidden="true")
+          = publicacion.imagenes.length
+          |  imágenes
 
-      |  Una o más imágenes recibieron denuncias pendientes de revisión. No podés modificar la publicación hasta que sean resueltas.
+      section.post-images-grid(aria-label="Fotografías de la publicación")
 
-  // Imágenes de la publicación
-  if publicacion.imagenes.length > 0
+        each imagen, index in publicacion.imagenes
+          article.post-image-card
 
-    .row.g-4
+            //- Fotografía
+            figure.post-image-figure
+              img.post-detail-image(
+                src=imagen.url
+                alt=publicacion.titulo + ' - fotografía ' + (index + 1)
+                loading="lazy"
+              )
 
-      each imagen in publicacion.imagenes
+              figcaption.post-image-caption
+                span Foto #{index + 1}
 
-        .col-md-6.col-lg-4
+                if imagen.copyright === 'copyright'
+                  span.post-copyright
+                    i.ti.ti-copyright(aria-hidden="true")
+                    | Con copyright
+                else
+                  span.post-free
+                    i.ti.ti-world(aria-hidden="true")
+                    | Libre
 
-          .card.publicacion-card.shadow-sm.h-100
+            .post-image-content
 
-            img.card-img-top.publicacion-img(
-              src=imagen.url
-              alt=publicacion.titulo
-            )
+              //- VALORACIONES
+              section.post-rating-section
 
-            .card-body
+                .post-rating-summary
+                  div
+                    span.post-rating-label Valoración promedio
+                    .post-rating-score
+                      i.ti.ti-star-filled(aria-hidden="true")
+                      strong= imagen.promedio || '0.0'
+                      span / 5
 
-              // VALORACIONES
-              .small.mb-2
-
-                .d-flex.align-items-center.gap-3
-
-                  span
-                    i.bi.bi-award-fill.me-1
-                    = imagen.promedio || '0.0'
-
-                  span.text-muted
+                  span.post-rating-votes
                     = imagen.totalVotos || 0
                     |  votos
 
-                .progress.mt-1(style="height:6px")
-
+                .progress.post-rating-progress(
+                  role="progressbar"
+                  aria-label="Promedio de valoraciones"
+                  aria-valuenow=Number(imagen.promedio) || 0
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                )
                   .progress-bar(
-                    style=`width:${((imagen.promedio || 0)/5)*100}%; background-color: var(--pink-dark, #ff65a3) !important;`
+                    style=`width:${((Number(imagen.promedio) || 0) / 5) * 100}%`
                   )
 
-              if user && user.id !== publicacion.usuario_id
+                if user && user.id !== publicacion.usuario_id
 
-                form.d-flex.align-items-center(
-                  action="/ratings/imagen/" + imagen.id
-                  method="POST"
-                )
-
-                  .btn-group.w-100
-
-                    each val in [1,2,3,4,5]
-
-                      button.btn(
-                        type="submit"
-                        name="puntuacion"
-                        value=val
-                        class=(imagen.miValoracion == val ? "btn-primary" : "btn-outline-primary")
-                      )
-                        = val
-
-              // DENUNCIAS DE IMÁGENES
-              if user && user.id !== publicacion.usuario_id
-
-                hr
-
-                if imagen.denunciadaPorMi
-
-                  p.small.text-muted.mb-2
-                    i.bi.bi-check-circle-fill.text-success.me-1
-                    | Ya denunciaste esta imagen.
-
-                else
-
-                  details
-
-                    summary.text-danger.small.fw-semibold(style="cursor:pointer")
-                      i.bi.bi-flag-fill.me-1
-                      | Denunciar imagen
-
-                    form.mt-3(
-                      action="/reports/images/" + imagen.id
-                      method="POST"
-                    )
-
-                      .mb-2
-
-                        label.form-label.small Motivo de denuncia
-
-                        select.form-select.form-select-sm(
-                          name="motivo"
-                          required
-                        )
-
-                          option(value="" disabled selected)
-                            | Seleccioná un motivo
-
-                          option(value="spam") Spam o publicidad no solicitada
-
-                          option(value="contenido_inapropiado") Contenido inapropiado
-
-                          option(value="derechos_autor") Derechos de autor
-
-                          option(value="acoso") Acoso o contenido ofensivo
-
-                          option(value="otro") Otro
-
-                      .mb-2
-
-                        label.form-label.small Justificación
-
-                        textarea.form-control.form-control-sm(
-                          name="descripcion"
-                          required
-                          minlength="10"
-                          maxlength="1000"
-                          rows="3"
-                          placeholder="Explicá por qué denunciás esta imagen..."
-                        )
-
-                      button.btn.btn-sm.btn-outline-danger(
-                        type="submit"
-                      )
-                        i.bi.bi-send.me-1
-                        | Enviar denuncia
-
-              hr
-
-              // COMENTARIOS
-              h6.text-secondary.small
-
-                i.bi.bi-chat-dots-fill.me-1
-
-                | Comentarios (#{imagen.comentarios ? imagen.comentarios.length : 0})
-
-              if publicacion.comentarios_habilitados
-
-                if user
-
-                  form(
-                    action="/comments/" + imagen.id
+                  form.post-rating-form(
+                    action="/ratings/imagen/" + imagen.id
                     method="POST"
                   )
+                    span.post-form-label
+                      if imagen.miValoracion
+                        | Tu valoración: #{imagen.miValoracion}/5. ¡Podés cambiarla!
+                      else
+                        | ¿Cuánto te gusta esta fotografía?
 
-                    .mb-3
+                    .rating-options
+                      each val in [1, 2, 3, 4, 5]
+                        button.rating-choice(
+                          type="submit"
+                          name="puntuacion"
+                          value=val
+                          class=(imagen.miValoracion == val ? 'is-selected' : '')
+                          title=val + ' de 5 estrellas'
+                          aria-label='Valorar con ' + val + ' de 5 estrellas'
+                        )= val
+
+              //- DENUNCIAS DE IMÁGENES
+              if user && user.id !== publicacion.usuario_id
+
+                .post-report-section
+                  if imagen.denunciadaPorMi
+                    p.post-report-done
+                      i.ti.ti-check-circle(aria-hidden="true")
+                      | Ya denunciaste esta imagen.
+
+                  else
+                    details.post-details
+                      summary.post-details-summary
+                        i.ti.ti-flag(aria-hidden="true")
+                        | Denunciar imagen
+
+                      form.post-report-form(
+                        action="/reports/images/" + imagen.id
+                        method="POST"
+                      )
+                        .mb-2
+                          label.form-label(for='motivo-imagen-' + imagen.id)
+                            | Motivo de denuncia
+
+                          select.form-select(
+                            id='motivo-imagen-' + imagen.id
+                            name="motivo"
+                            required
+                          )
+                            option(value="" disabled selected)
+                              | Seleccioná un motivo
+                            option(value="spam") Spam o publicidad no solicitada
+                            option(value="contenido_inapropiado") Contenido inapropiado
+                            option(value="derechos_autor") Derechos de autor
+                            option(value="acoso") Acoso o contenido ofensivo
+                            option(value="otro") Otro
+
+                        .mb-2
+                          label.form-label(for='descripcion-imagen-' + imagen.id)
+                            | Justificación
+
+                          textarea.form-control(
+                            id='descripcion-imagen-' + imagen.id
+                            name="descripcion"
+                            required
+                            minlength="10"
+                            maxlength="1000"
+                            rows="3"
+                            placeholder="Explicá por qué denunciás esta imagen..."
+                          )
+
+                        button.btn.btn-sm.btn-outline-danger(type="submit")
+                          i.ti.ti-send.me-1(aria-hidden="true")
+                          | Enviar denuncia
+
+              //- COMENTARIOS
+              section.post-comments-section
+
+                .post-comments-heading
+                  h3
+                    i.ti.ti-message-circle(aria-hidden="true")
+                    | Comentarios
+
+                  span.post-comment-count
+                    = imagen.comentarios ? imagen.comentarios.length : 0
+
+                if publicacion.comentarios_habilitados
+
+                  if user
+                    form.post-comment-form(
+                      action="/comments/" + imagen.id
+                      method="POST"
+                    )
+                      label.visually-hidden(for='comentario-' + imagen.id)
+                        | Escribí un comentario
 
                       textarea.form-control(
+                        id='comentario-' + imagen.id
                         name="contenido"
                         required
                         maxlength="1000"
-                        placeholder="Escribí un comentario..."
+                        rows="2"
+                        placeholder="Dejá tu opinión sobre esta fotografía..."
                       )
 
-                    button.btn.btn-pink(type="submit")
-                      i.bi.bi-chat-fill.me-1
-                      | Comentar
+                      button.btn.btn-pink.btn-sm(type="submit")
+                        i.ti.ti-send.me-1(aria-hidden="true")
+                        | Comentar
+
+                  else
+                    p.post-login-hint
+                      | ¿Tenés algo lindo para decir?
+                      a(href="/auth/login") Iniciá sesión para comentar.
 
                 else
+                  .post-comments-disabled
+                    i.ti.ti-lock(aria-hidden="true")
+                    | Los comentarios están deshabilitados para esta publicación.
 
-                  p.text-muted.small Iniciá sesión para comentar.
+                //- LISTADO DE COMENTARIOS
+                if imagen.comentarios && imagen.comentarios.length > 0
 
-              else
+                  .post-comment-list
 
-                .alert.alert-secondary.p-2.text-center.small.mb-3
+                    each comentario in imagen.comentarios
+                      article.post-comment
 
-                  i.bi.bi-lock-fill.me-1
-
-                  | Los comentarios están deshabilitados para esta publicación.
-
-              // LISTADO DE COMENTARIOS
-              if imagen.comentarios && imagen.comentarios.length > 0
-
-                each comentario in imagen.comentarios
-
-                  .card.mb-2.shadow-sm
-
-                    .card-body.py-2
-                      strong(style="color: var(--pink-dark)")
-                        if comentario.usuario
-
-                          = comentario.usuario.username
-
-                          if comentario.usuario.activo === false
-                            span.badge.bg-secondary.ms-2
-                              | Cuenta suspendida
-                        else
-                          | Usuario eliminado
-                      p.mt-2.mb-1= comentario.contenido
-
-                      // El autor del comentario puede eliminarlo
-                      if user && user.id === comentario.usuario_id
-
-                        form(
-                          action="/comments/" + comentario.id + "/delete"
-                          method="POST"
-                        )
-
-                          button.btn.btn-sm.btn-danger(type="submit")
-                            i.bi.bi-trash-fill.me-1
-                            | Eliminar
-
-                      // Denunciar comentarios ajenos
-                      if user && !isOwner && user.id !== comentario.usuario_id && comentario.usuario_id !== publicacion.usuario_id
-
-                        details.mt-2
-
-                          summary.text-danger.small(style="cursor:pointer")
-                            i.bi.bi-flag-fill.me-1
-                            | Denunciar comentario
-
-                          form.mt-2(
-                            action="/reports/comments/" + comentario.id
-                            method="POST"
+                        if comentario.usuario && comentario.usuario.avatar
+                          img.post-comment-avatar(
+                            src=comentario.usuario.avatar
+                            alt=""
+                            loading="lazy"
                           )
+                        else
+                          span.post-comment-avatar.post-avatar-fallback
+                            if comentario.usuario
+                              = (comentario.usuario.username || 'U').charAt(0).toUpperCase()
+                            else
+                              i.ti.ti-user(aria-hidden="true")
 
-                            .mb-2
+                        .post-comment-content
 
-                              select.form-select.form-select-sm(
-                                name="motivo"
-                                required
+                          .post-comment-author
+                            strong
+                              if comentario.usuario
+                                = comentario.usuario.username
+                                if comentario.usuario.activo === false
+                                  span.post-account-suspended Cuenta suspendida
+                              else
+                                | Usuario eliminado
+
+                          p.post-comment-text= comentario.contenido
+
+                          .post-comment-actions
+
+                            //- El autor del comentario puede eliminarlo
+                            if user && user.id === comentario.usuario_id
+                              form(
+                                action="/comments/" + comentario.id + "/delete"
+                                method="POST"
                               )
+                                button.post-comment-delete(
+                                  type="submit"
+                                )
+                                  i.ti.ti-trash(aria-hidden="true")
+                                  | Eliminar
 
-                                option(value="" disabled selected)
-                                  | Seleccioná un motivo
+                            //- Denunciar comentarios ajenos
+                            if user && !isOwner && user.id !== comentario.usuario_id && comentario.usuario_id !== publicacion.usuario_id
 
-                                option(value="spam") Spam o publicidad no solicitada
+                              details.post-details.post-comment-report
+                                summary.post-details-summary
+                                  i.ti.ti-flag(aria-hidden="true")
+                                  | Denunciar
 
-                                option(value="contenido_inapropiado") Contenido inapropiado
+                                form.post-report-form(
+                                  action="/reports/comments/" + comentario.id
+                                  method="POST"
+                                )
+                                  .mb-2
+                                    label.visually-hidden(
+                                      for='motivo-comentario-' + comentario.id
+                                    )
+                                      | Motivo de denuncia
 
-                                option(value="derechos_autor") Derechos de autor
+                                    select.form-select.form-select-sm(
+                                      id='motivo-comentario-' + comentario.id
+                                      name="motivo"
+                                      required
+                                    )
+                                      option(value="" disabled selected)
+                                        | Seleccioná un motivo
+                                      option(value="spam") Spam o publicidad no solicitada
+                                      option(value="contenido_inapropiado") Contenido inapropiado
+                                      option(value="derechos_autor") Derechos de autor
+                                      option(value="acoso") Acoso o contenido ofensivo
+                                      option(value="otro") Otro
 
-                                option(value="acoso") Acoso o contenido ofensivo
+                                  textarea.form-control.form-control-sm.mb-2(
+                                    name="descripcion"
+                                    required
+                                    minlength="10"
+                                    maxlength="1000"
+                                    rows="2"
+                                    placeholder="Justificá la denuncia..."
+                                  )
 
-                                option(value="otro") Otro
+                                  button.btn.btn-sm.btn-outline-danger(type="submit")
+                                    | Enviar denuncia
 
-                            textarea.form-control.form-control-sm.mb-2(
-                              name="descripcion"
-                              required
-                              minlength="10"
-                              maxlength="1000"
-                              rows="2"
-                              placeholder="Justificá la denuncia..."
-                            )
+                else
+                  p.post-no-comments
+                    | Todavía no hay comentarios. ¡Alguien tiene que romper el hielo!
 
-                            button.btn.btn-sm.btn-outline-danger(type="submit")
-                              | Enviar denuncia
+    else
+      .empty-state.text-center.py-5
+        i.ti.ti-photo-off(aria-hidden="true")
+        h2 No hay fotografías disponibles
+        p.text-muted Esta publicación todavía no tiene imágenes para mostrar.
 
-              else
+    //- Etiquetas
+    if publicacion.tags && publicacion.tags.length > 0
+      section.post-tags-section
+        h2.post-secondary-heading
+          i.ti.ti-hash(aria-hidden="true")
+          | Etiquetas
 
-                p.text-muted.small.text-center No hay comentarios todavía.
+        .post-tags
+          each tag in publicacion.tags
+            a.post-tag(
+              href="/search?q=" + encodeURIComponent(tag.nombre)
+            )= '#' + tag.nombre
 
-  else
+    //- Acciones del propietario
+    if isOwner && !bloqueadaPorDenuncias
+      section.post-owner-actions
+        span.post-section-kicker GESTIÓN DE TU PUBLICACIÓN
 
-    .alert.alert-light
-      | Esta publicación no tiene imágenes disponibles.
+        .post-owner-buttons
+          a.btn.btn-edit(href="/posts/" + publicacion.id + "/edit")
+            i.ti.ti-pencil.me-1(aria-hidden="true")
+            | Editar publicación
 
-  // DESCRIPCIÓN
-  if publicacion.descripcion
+          form(
+            action="/posts/" + publicacion.id + "/delete"
+            method="POST"
+          )
+            button.btn.btn-danger(type="submit")
+              i.ti.ti-trash.me-1(aria-hidden="true")
+              | Eliminar publicación
 
-    p.mt-4.fs-5= publicacion.descripcion
-
-  // ETIQUETAS
-  if publicacion.tags && publicacion.tags.length > 0
-
-    .mt-4
-
-      strong
-        i.bi.bi-tags-fill.me-1
-        | Etiquetas:
-
-      br
-
-      each tag in publicacion.tags
-
-        a.post-tag(href="/search?q=" + tag.nombre)
-          | ##{tag.nombre}
-
-  // ACCIONES DEL AUTOR
-  if isOwner && !bloqueadaPorDenuncias
-
-    .d-flex.gap-2.mt-4.flex-wrap.post-actions
-
-      a.btn.btn-edit(
-        href="/posts/" + publicacion.id + "/edit"
-      )
-        i.bi.bi-pencil-fill.me-1
-        | Editar publicación
-
-      form(
-        action="/posts/" + publicacion.id + "/delete"
-        method="POST"
-      )
-
-        button.btn.btn-delete.btn-danger(type="submit")
-          i.bi.bi-trash-fill.me-1
-          | Eliminar publicación
-
-      form(
-        action="/posts/" + publicacion.id + "/habcomments"
-        method="POST"
-      )
-
-        if publicacion.comentarios_habilitados
-
-          button.btn.btn-comments(type="submit")
-            i.bi.bi-lock-fill.me-1
-            | Deshabilitar comentarios
-
-        else
-
-          button.btn.btn-success(type="submit")
-            i.bi.bi-unlock-fill.me-1
-            | Habilitar comentarios
+          form(
+            action="/posts/" + publicacion.id + "/habcomments"
+            method="POST"
+          )
+            if publicacion.comentarios_habilitados
+              button.btn.btn-comments(type="submit")
+                i.ti.ti-message-off.me-1(aria-hidden="true")
+                | Deshabilitar comentarios
+            else
+              button.btn.btn-success(type="submit")
+                i.ti.ti-message-check.me-1(aria-hidden="true")
+                | Habilitar comentarios
