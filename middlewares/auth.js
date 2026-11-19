@@ -73,14 +73,24 @@ const isValidator = requireRole('validador', 'admin');
 
 const isAdmin = requireRole('admin');
 
-const configVarLocals = (req, res, next) => {res.locals.user =
+const configVarLocals = (req, res, next) => {
+
+    res.locals.user =
         req.session &&
         req.session.user &&
         req.session.user.id
             ? req.session.user
             : null;
-    const alert = req.session.alert || null;
-    delete req.session.alert;
+
+    res.locals.alert =
+        req.session && req.session.alert
+            ? req.session.alert
+            : null;
+
+    if (req.session) {
+        delete req.session.alert;
+    }
+
     next();
 };
 module.exports = {

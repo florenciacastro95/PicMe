@@ -2383,3 +2383,75 @@ textarea.form-control {
     width: 100%;
   }
 }
+
+/* publis de users seguidos*/
+
+.follow-feed-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.2rem;
+
+  margin-bottom: 1.7rem;
+  padding: 1.2rem 1.35rem;
+
+  border: 3px solid white;
+  border-radius: 20px;
+
+  background: linear-gradient(
+    115deg,
+    #ffffff,
+    #fff0f8,
+    #ffd5ea
+  );
+
+  box-shadow: var(--shadow-pink);
+}
+
+.follow-feed-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+
+  margin-bottom: .35rem;
+
+  color: var(--pink-strong);
+
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.follow-feed-title {
+  margin: 0;
+
+  color: var(--pink-verydark);
+
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -.045em;
+}
+
+.follow-feed-description {
+  margin: .4rem 0 0;
+
+  color: var(--text-muted);
+  font-size: .84rem;
+}
+
+@media (max-width: 575.98px) {
+
+  .follow-feed-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .9rem;
+
+    padding: 1rem;
+  }
+
+  .follow-feed-header .btn {
+    width: 100%;
+  }
+
+}

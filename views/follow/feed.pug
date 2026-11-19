@@ -1,0 +1,141 @@
+extends ../layouts/layout
+
+block metadata
+  title Publicaciones que sigo - PicME!
+  meta(
+    name="description"
+    content="Descubrí las fotografías compartidas por los usuarios que seguís en PicME!."
+  )
+
+block content
+
+  section.follow-feed-header(aria-labelledby="follow-feed-title")
+
+    div
+      span.follow-feed-kicker
+        i.ti.ti-users.me-1(aria-hidden="true")
+        | Tu comunidad
+      h1.follow-feed-title#follow-feed-title
+        | Publicaciones que sigo
+      p.follow-feed-description
+        | Las últimas fotografías de las personas que elegiste seguir.
+    a.btn.btn-outline-primary(href="/search")
+      i.ti.ti-compass.me-1(aria-hidden="true")
+      | Explorar usuarios
+
+
+  if publicaciones && publicaciones.length > 0
+    section.masonry-grid(aria-label="Publicaciones de usuarios seguidos")
+      each pub in publicaciones
+        article.masonry-item
+          .photo-card
+            if pub.imagenes && pub.imagenes.length > 0
+              a.photo-card-image-link(href="/posts/" + pub.id
+                aria-label="Ver publicación: " + pub.titulo)
+                img.photo-card-image(src=pub.imagenes[0].url
+                  alt=pub.titulo loading="lazy")
+            else
+              a.photo-card-image-link(href="/posts/" + pub.id
+                aria-label="Ver publicación: " + pub.titulo)
+                .photo-card-placeholder
+                  i.ti.ti-photo(aria-hidden="true")
+            .photo-card-body
+              h2.photo-card-title
+                a(href="/posts/" + pub.id)= pub.titulo
+              if pub.descripcion
+                p.photo-card-description= pub.descripcion
+              if pub.tags && pub.tags.length > 0
+                .post-tags.mt-2
+                  each tag in pub.tags.slice(0, 4)
+                    a.post-tag(href="/search?tag=" + encodeURIComponent(tag.nombre) + "&filterType=publicaciones")= '#' + tag.nombre
+              .photo-card-meta.mt-2
+                span
+                  i.ti.ti-photo(aria-hidden="true")= pub.totalImagenes
+
+                span
+                  i.ti.ti-star(aria-hidden="true")
+
+                  if pub.promedioValoracion
+                    = pub.promedioValoracion
+                    |  / 5
+                  else
+                    | Sin votos
+
+
+                if pub.copyright === 'copyright'
+                  span.text-warning
+                    i.ti.ti-copyright(aria-hidden="true")
+                    | Con copyright
+                else
+                  span.text-success
+                    i.ti.ti-world(aria-hidden="true")
+                    | Libre
+                span
+                  i.ti.ti-calendar(aria-hidden="true")
+                  = new Date(pub.created_at).toLocaleDateString('es-AR')
+              .photo-card-author
+                if pub.usuario.avatar
+                  img.avatar-small( src=pub.usuario.avatar
+                    alt="" loading="lazy")
+                else
+                  span.avatar-small
+                    = (pub.usuario.username || 'U').charAt(0).toUpperCase()
+
+                a(href="/profile/" + pub.usuario.username)
+                  = pub.usuario.username
+
+
+    // Paginación
+    if totalPages > 1
+      nav.mt-4(aria-label="Navegación de páginas")
+        ul.pagination.justify-content-center
+          if hasPrevPage
+            li.page-item
+              a.page-link( href=`/follow/feed?page=${currentPage - 1}`
+                aria-label="Página anterior")
+                i.ti.ti-chevron-left(aria-hidden="true")
+          else
+            li.page-item.disabled
+              span.page-link
+                i.ti.ti-chevron-left(aria-hidden="true")
+
+          - for (let i = 1; i <= totalPages; i++)
+            if i === currentPage
+              li.page-item.active(aria-current="page")
+                span.page-link= i
+            else
+              li.page-item
+                a.page-link(href=`/follow/feed?page=${i}`)= i
+
+          if hasNextPage
+            li.page-item
+              a.page-link(href=`/follow/feed?page=${currentPage + 1}`
+                aria-label="Página siguiente")
+                i.ti.ti-chevron-right(aria-hidden="true")
+
+          else
+            li.page-item.disabled
+              span.page-link
+                i.ti.ti-chevron-right(aria-hidden="true")
+
+  else
+    .empty-state.text-center.py-5
+      if seguidosCount === 0
+        i.ti.ti-users(aria-hidden="true")
+        h2.mt-3
+          | Todavía no seguís a nadie zpezial y único
+        p
+          | Explorá PicME! y encontrá fotógrafos detergentes cuyas publicaciones quieras seguir.
+
+      else
+
+        i.ti.ti-camera-off(aria-hidden="true")
+        h2.mt-3
+          | Todavía no hay publicaciones detergentes
+
+        p
+          | Las personas únicas y detergentes que seguís todavía no tienen fotografías para mostrar acá.
+
+      a.btn.btn-pink.mt-3(href="/search")
+        i.ti.ti-compass.me-1(aria-hidden="true")
+        | Explorar PicME!

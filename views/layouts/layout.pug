@@ -88,6 +88,9 @@ html(lang="es")
             span Explorar
 
           if user
+            a.site-nav-link(href="/follow/feed" aria-label="Publicaciones de usuarios que sigo")
+              i.ti.ti-users(aria-hidden="true")
+              span Siguiendo
             a.site-nav-link.site-nav-create(href="/posts/create")
               i.ti.ti-plus(aria-hidden="true")
               span Nueva publicación
