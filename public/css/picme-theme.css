@@ -2455,3 +2455,20 @@ textarea.form-control {
   }
 
 }
+
+/* Valoración registrada */
+
+.post-rating-already {
+  margin-top: .9rem;
+  padding: .8rem;
+
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+
+  background: var(--pink-lightest);
+}
+
+.post-rating-already > .ti {
+  color: #258052;
+  font-size: 1.1rem;
+}

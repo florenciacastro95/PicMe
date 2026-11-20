@@ -119,39 +119,31 @@ block content
                   .progress-bar(
                     style=`width:${((Number(imagen.promedio) || 0) / 5) * 100}%`
                   )
-
                 if user && user.id !== publicacion.usuario_id
-
-                  form.post-rating-form(
-                    action="/ratings/imagen/" + imagen.id
-                    method="POST"
-                  )
-                    span.post-form-label
-                      if imagen.miValoracion
-                        | Tu valoración: #{imagen.miValoracion}/5. ¡Podés cambiarla!
-                      else
+                  if imagen.miValoracion
+                    .post-rating-already
+                      i.ti.ti-check-circle.me-1(aria-hidden="true")
+                      span.post-form-label
+                        | Ya registraste tu valoración: #{imagen.miValoracion}/5
+                      p.text-muted.small.mb-0
+                        | Cada usuario puede valorar esta imagen una sola vez.
+                  else
+                    form.post-rating-form(action="/ratings/imagen/" + imagen.id
+                      method="POST")
+                      span.post-form-label
                         | ¿Cuánto te gusta esta fotografía?
-
-                    .rating-options
-                      each val in [1, 2, 3, 4, 5]
-                        button.rating-choice(
-                          type="submit"
-                          name="puntuacion"
-                          value=val
-                          class=(imagen.miValoracion == val ? 'is-selected' : '')
-                          title=val + ' de 5 estrellas'
-                          aria-label='Valorar con ' + val + ' de 5 estrellas'
-                        )= val
-
+                      .rating-options
+                        each val in [1, 2, 3, 4, 5]
+                          button.rating-choice(type="submit" name="puntuacion"
+                            value=val title=val + ' de 5 estrellas'
+                            aria-label='Valorar con ' + val + ' de 5 estrellas')= val
               //- DENUNCIAS DE IMÁGENES
               if user && user.id !== publicacion.usuario_id
-
                 .post-report-section
                   if imagen.denunciadaPorMi
                     p.post-report-done
                       i.ti.ti-check-circle(aria-hidden="true")
                       | Ya denunciaste esta imagen.
-
                   else
                     details.post-details
                       summary.post-details-summary

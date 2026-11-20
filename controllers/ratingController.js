@@ -1,92 +1,103 @@
 const { Rating, Imagen, Publicacion } = require('../models');
+
 const saveRedirect = (req, res, path) => {
     req.session.save(() => res.redirect(path));
 };
-exports.rate = async (req, res) => {
-    let urlPublicacion = '/';
-    try {
-        
-        const { imagenId }= req.params; 
-        const usuarioId = req.session.user.id;
-        const puntuacion = parseInt(req.body.puntuacion, 10);
 
+exports.rate = async (req, res) => {
+
+    let urlPublicacion = '/';
+
+    try {
+
+        const { imagenId } = req.params;
+        const usuarioId = req.session.user.id;
+        const puntuacion = Number(req.body.puntuacion);
         const imagen = await Imagen.findOne({
-            where: {id: imagenId},
+            where: {
+                id: imagenId
+            },
             include: [
                 {
                     model: Publicacion,
                     as: 'publicacion',
                     attributes: ['id', 'usuario_id', 'activo'],
-                    where: { activo: true }
+                    where: {
+                        activo: true
+                    }
                 }
             ]
         });
+        if (!imagen || !imagen.publicacion || !imagen.publicacion.activo) {
 
-
-        if (imagen && imagen.publicacion) {
-            urlPublicacion = '/posts/' + imagen.publicacion.id;
-        }
-
-
-        if (!imagen|| !imagen.publicacion || !imagen.publicacion.activo) {
             req.session.alert = {
                 type: 'danger',
                 text: 'Imagen no encontrada.'
-            };return saveRedirect(req, res, '/')
+            };
+            return saveRedirect(req, res, '/');
         }
-        urlPublicacion = '/posts/' + imagen.publicacion_id;
 
-      
-        if (isNaN(puntuacion) || puntuacion < 1 || puntuacion > 5) {
+        urlPublicacion = '/posts/' + imagen.publicacion.id;
+        if (!Number.isInteger(puntuacion) || puntuacion < 1 || puntuacion > 5) {
+
             req.session.alert = {
                 type: 'danger',
-                text: 'La puntuacion debe estar entre 1 y 5.'
+                text: 'La puntuación debe estar entre 1 y 5.'
             };
-            return saveRedirect(req, res, urlPublicacion)
+            return saveRedirect(req, res, urlPublicacion);
         }
         if (imagen.publicacion.usuario_id === usuarioId) {
+
             req.session.alert = {
                 type: 'warning',
-                text: 'No puedes valorar tus propias imagenes.'
+                text: 'No podés valorar tus propias imágenes.'
             };
-            return saveRedirect(req, res, urlPublicacion)
+            return saveRedirect(req, res, urlPublicacion);
         }
         const existente = await Rating.findOne({
             where: {
-                imagen_id: imagenId, 
+                imagen_id: imagenId,
                 usuario_id: usuarioId
             }
         });
 
         if (existente) {
-            await existente.update({
-                puntuacion: puntuacion
-            });
-            req.session.alert = {
-                type: 'success',
-                text: 'Valoracion actualizada.'
-            }
-        } else {
-            await Rating.create({
-                imagen_id: imagenId, 
-                usuario_id: usuarioId,
-                puntuacion
-            });
-            req.session.alert = {
-                type: 'success',
-                text: 'Gracias por tu valoracion.'
-            };
-        }
 
-        return saveRedirect(req, res, urlPublicacion)
+            req.session.alert = {
+                type: 'warning',
+                text: 'Ya valoraste esta imagen. Cada usuario puede valorarla una sola vez.'
+            };
+
+            return saveRedirect(req, res, urlPublicacion);
+        }
+        await Rating.create({
+            imagen_id: imagenId,
+            usuario_id: usuarioId,
+            puntuacion
+        });
+
+        req.session.alert = {
+            type: 'success',
+            text: '¡Gracias por tu valoración!'
+        };
+
+        return saveRedirect(req, res, urlPublicacion);
 
     } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+
+            req.session.alert = {
+                type: 'warning',
+                text: 'Ya valoraste esta imagen anteriormente.'
+            };
+            return saveRedirect(req, res, urlPublicacion);
+        }
+
         console.error('Error al valorar:', error);
         req.session.alert = {
             type: 'danger',
-            text: 'Error al registrar la valoracion.'
+            text: 'Error al registrar la valoración.'
         };
         return saveRedirect(req, res, urlPublicacion);
-        
     }
 };
